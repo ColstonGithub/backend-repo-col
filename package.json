@@ -1,0 +1,54 @@
+{
+  "name": "backend-repo-col",
+  "version": "1.0.0",
+  "description": "This README would normally document whatever steps are necessary to get your application up and running.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js",
+    "build": "webpack --config webpack.config.js",
+    "server": "nodemon index.js",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://Preetam34@bitbucket.org/preetam34/backend-repo-col.git"
+  },
+  "keywords": [],
+  "author": "Preetam",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.0",
+    "body-parser": "^1.20.1",
+    "concurrently": "^5.3.0",
+    "config": "^3.3.3",
+    "connect-multiparty": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.17.1",
+    "express-validator": "^6.14.2",
+    "handlebars": "^4.7.7",
+    "joi": "^17.7.0",
+    "joi-password-complexity": "^5.1.0",
+    "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.21",
+    "lodash.sortby": "^4.7.0",
+    "mongodb-client-encryption": "^2.7.1",
+    "mongoose": "^5.11.11",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.1",
+    "path": "^0.12.7",
+    "shortid": "^2.2.16",
+    "slugify": "^1.6.5",
+    "validator": "^13.5.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20",
+    "react-scripts": "^5.0.1"
+  },
+  "bugs": {
+    "url": "https://bitbucket.org/preetam34/backend-repo-col/issues"
+  },
+  "homepage": "https://bitbucket.org/preetam34/backend-repo-col#readme"
+}
