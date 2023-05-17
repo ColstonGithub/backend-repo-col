@@ -151,23 +151,23 @@ exports.updateBlogs = async (req, res) => {
     if (req.file) {
       blogs.image = process.env.API + "/public/" + req.file.filename;
     }
-    if (title) {
+    if (title != undefined) {
       blogs.title = title;
       blogs.slug = slugify(req.body.title);
     }
-    if (blogCategory) {
+    if (blogCategory != undefined) {
       blogs.blogCategory = blogCategory;
     }
-    if (text) {
+    if (text != undefined) {
       blogs.text = text;
     }
-    if (imageAltText) {
+    if (imageAltText != undefined) {
       blogs.imageAltText = imageAltText;
     }
-    if (pageTitle) {
+    if (pageTitle != undefined) {
       blogs.pageTitle = pageTitle;
     }
-    if (pageHeading) {
+    if (pageHeading != undefined) {
       blogs.pageHeading = pageHeading;
     }
     const updatedProduct = await Blogs.findOneAndUpdate({ _id }, blogs, {

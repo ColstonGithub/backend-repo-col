@@ -1,7 +1,8 @@
 const Slider = require("../models/slider");
 const shortid = require("shortid");
 const slugify = require("slugify");
-
+const path = require("path");
+const fs = require("fs");
 exports.createSlider = (req, res) => {
   const { title, createdBy } = req.body;
   
@@ -57,15 +58,34 @@ exports.getSliderById = (req, res) => {
 };
 
 // new update
-exports.deleteSliderById = (req, res) => {
+exports.deleteSliderById = async (req, res) => {
   const { sliderId } = req.body.payload;
   if (sliderId) {
+    const response = await Slider.findOne({ _id: sliderId });
+
+    if (response) {
+      response.sliders.forEach((banner) => {
+        let newValue = banner.img.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+        const imagePath = path.join(__dirname, "../uploads", newValue);
+        fs.unlink(imagePath, (error) => {
+          if (error) {
+            console.error(`Error deleting image file: ${error}`);
+          } else {
+            console.log(`Image file ${imagePath} deleted successfully.`);
+          }
+        });
+      });
+
     Slider.deleteOne({ _id: sliderId }).exec((error, result) => {
       if (error) return res.status(400).json({ error });
       if (result) {
         res.status(202).json({ result });
       }
     });
+  }
   } else {
     res.status(400).json({ error: "Params required" });
   }

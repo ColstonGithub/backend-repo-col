@@ -1,7 +1,8 @@
 const Career = require("../models/career");
 const shortid = require("shortid");
 const slugify = require("slugify");
-
+const path = require("path");
+const fs = require("fs");
 exports.createCareer = (req, res) => {
   try {
     const { name, email, subject, mobileNo, message } = req.body;
@@ -54,10 +55,10 @@ exports.deleteCareerById = async (req, res) => {
   try {
     const { id } = req.body;
     if (id) {
-      const response = await CareClean.findOne({ _id: id });
+      const response = await Career.findOne({ _id: id });
 
       if (response) {
-        let newBannerImage = response?.bannerImage.replace(
+        let newBannerImage = response?.pdf.replace(
           "http://localhost:5000/public/",
           ""
         );
@@ -121,7 +122,7 @@ exports.updateCareer = async (req, res) => {
     // const careerData = {
     //   createdBy: req.user._id,
     // };
-    if (pdf != undefined) {
+    if (pdf != undefined && pdf != "") {
       careerData.pdf = pdf;
     }
     if (subject != undefined) {

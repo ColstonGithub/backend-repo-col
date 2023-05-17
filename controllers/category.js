@@ -1,7 +1,8 @@
 const Category = require("../models/category");
 const slugify = require("slugify");
 const shortid = require("shortid");
-
+const path = require("path");
+const fs = require("fs");
 function createCategories(categories, parentId = null) {
   const categoryList = [];
   let category;
@@ -40,8 +41,12 @@ exports.addCategory = (req, res) => {
       createdBy: req.user._id,
     };
 
-    if (req.file) {
-      categoryObj.categoryImage = req.file.location;
+    const image = req.file
+      ? process.env.API + "/public/" + req.file.filename
+      : undefined;
+
+    if (image) {
+      categoryObj.categoryImage = image;
     }
 
     if (req.body.parentId) {
@@ -65,13 +70,11 @@ exports.getCategories = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
   const page = parseInt(req.query.page) || 1; // Set a default page number of 1
   try {
-    const categories = await Category.find({});
-    //.sort({ _id: -1 })
+    const categories = await Category.find({}).sort({ _id: -1 });
     // .limit(limit)
     //  .skip(limit * page - limit);
     //   console.log(limit, page);
     const categoryList = createCategories(categories);
-    //categoryList.slice(page * limit, page * limit + limit);
     const count = await categoryList.length;
     const totalPages = Math.ceil(count / limit);
 
@@ -104,11 +107,9 @@ exports.updateCategories = async (req, res) => {
   try {
     const { _id, name, parentId, keyword, imageAltText } = req.body;
 
-    let categoryImage = "";
-
-    if (req.file) {
-      categoryImage = req.file.location;
-    }
+    const categoryImage = req.file["categoryImage"]
+      ? process.env.API + "/public/" + req.file["categoryImage"][0].filename
+      : undefined;
 
     const updatedCategories = [];
 
@@ -143,7 +144,7 @@ exports.updateCategories = async (req, res) => {
       if (parentId !== "") {
         category.parentId = parentId;
       }
-      if (categoryImage !== "") {
+      if (categoryImage != undefined && categoryImage !== "") {
         category.categoryImage = categoryImage;
       }
       const updatedCategory = await Category.findOneAndUpdate(
@@ -164,14 +165,30 @@ exports.deleteCategories = async (req, res) => {
   try {
     const { ids } = req.body.payload;
     const deletedCategories = [];
-    for (let i = 0; i < ids.length; i++) {
-      const deleteCategory = await Category.findOneAndDelete({
-        _id: ids[i]._id,
-        createdBy: req.user._id,
-      });
-      deletedCategories.push(deleteCategory);
-    }
 
+    const response = await Category.findOne({ _id: ids[0]._id });
+
+    if (response) {
+      let newBannerImage = response?.categoryImage.replace(
+        "http://localhost:5000/public/",
+        ""
+      );
+      const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
+
+      fs.unlink(imagepath1, (error) => {
+        if (error) {
+          console.error(error);
+        }
+      });
+
+      for (let i = 0; i < ids.length; i++) {
+        const deleteCategory = await Category.findOneAndDelete({
+          _id: ids[i]._id,
+          createdBy: req.user._id,
+        });
+        deletedCategories.push(deleteCategory);
+      }
+    }
     if (deletedCategories.length == ids.length) {
       res.status(201).json({ message: "Categories removed" });
     } else {

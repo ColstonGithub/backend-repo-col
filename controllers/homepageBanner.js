@@ -1,7 +1,8 @@
 const Banner = require("../models/homepageBanner");
 const shortid = require("shortid");
 const slugify = require("slugify");
-
+const path = require("path");
+const fs = require("fs");
 exports.createBanner = (req, res) => {
   try {
     const { title } = req.body;
@@ -11,7 +12,7 @@ exports.createBanner = (req, res) => {
     if (req.files) {
       banners = req.files.map((file, index) => {
         return {
-          img: file.location,
+          img: process.env.API + "/public/" + file.filename,
           imageAltText: req.body.imageAltText[index],
         };
       });
@@ -71,16 +72,35 @@ exports.getBannerById = (req, res) => {
 };
 
 // new update
-exports.deleteBannerById = (req, res) => {
+exports.deleteBannerById = async (req, res) => {
   try {
     const { bannerId } = req.body;
     if (bannerId) {
-      Banner.deleteOne({ _id: bannerId }).exec((error, result) => {
-        if (error) return res.status(400).json({ error });
-        if (result) {
-          res.status(202).json({ result });
-        }
-      });
+      const response = await Banner.findOne({ _id: bannerId });
+
+      if (response) {
+        response.banners.forEach((banner) => {
+          let newValue = banner.img.replace(
+            "http://localhost:5000/public/",
+            ""
+          );
+          const imagePath = path.join(__dirname, "../uploads", newValue);
+          fs.unlink(imagePath, (error) => {
+            if (error) {
+              console.error(`Error deleting image file: ${error}`);
+            } else {
+              console.log(`Image file ${imagePath} deleted successfully.`);
+            }
+          });
+        });
+
+        Banner.deleteOne({ _id: bannerId }).exec((error, result) => {
+          if (error) return res.status(400).json({ error });
+          if (result) {
+            res.status(202).json({ result });
+          }
+        });
+      }
     } else {
       res.status(400).json({ error: "Params required" });
     }
@@ -94,13 +114,14 @@ exports.getBanners = async (req, res) => {
   const page = parseInt(req.query.page) || 1; // Set a default page number of 1
 
   try {
-    const homepageBanner = await Banner.find({}).sort({ _id: -1 })
+    const homepageBanner = await Banner.find({})
+      .sort({ _id: -1 })
       .limit(limit)
       .skip(limit * page - limit);
 
     const count = await Banner.countDocuments().exec();
     const totalPages = Math.ceil(count / limit);
-    
+
     if (homepageBanner) {
       res.status(200).json({
         homepageBanner,
@@ -122,7 +143,7 @@ exports.updateBanner = async (req, res) => {
     if (req.files) {
       banners = req.files.map((file, index) => {
         return {
-          img: file.location,
+          img: process.env.API + "/public/" + file.filename,
           imageAltText: req.body.imageAltText[index],
         };
       });
@@ -132,7 +153,7 @@ exports.updateBanner = async (req, res) => {
       slug: slugify(title),
       createdBy: req.user._id,
     };
-    if (banners.length > 0) {
+    if (banners != [] && banners.length > 0) {
       banner.banners = banners;
     }
     const updatedBanner = await Banner.findOneAndUpdate({ _id }, banner, {

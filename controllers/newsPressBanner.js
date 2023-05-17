@@ -1,17 +1,18 @@
 const NewsPressBanner = require("../models/newsPressBanner");
 const shortid = require("shortid");
 const slugify = require("slugify");
-
+const path = require("path");
+const fs = require("fs");
 exports.createNewsPressBanner = (req, res) => {
   try {
     const { title, bannerImageAltText, bannerImageTextAltText } = req.body;
 
     const bannerImage = req.files["bannerImage"]
-      ? req.files["bannerImage"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
 
     const bannerImageText = req.files["bannerImageText"]
-      ? req.files["bannerImageText"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
       : undefined;
 
     const PageBanner = new NewsPressBanner({
@@ -60,14 +61,44 @@ exports.deleteNewsPressBannerById = async (req, res) => {
   try {
     const { id } = req.body;
     if (id) {
-      await NewsPressBanner.deleteOne({ _id: id }).exec((error, result) => {
-        if (error) return res.status(400).json({ error });
-        if (result) {
-          res
-            .status(202)
-            .json({ message: "Data has been deleted", result: result });
-        }
-      });
+      const response = await NewsPressBanner.findOne({ _id: id });
+
+      if (response) {
+        let newBannerImage = response?.bannerImage.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+        let newBannerImageText = response?.bannerImageText.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+
+        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
+        const imagepath2 = path.join(
+          __dirname,
+          "../uploads",
+          newBannerImageText
+        );
+        fs.unlink(imagepath1, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+        fs.unlink(imagepath2, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+
+        await NewsPressBanner.deleteOne({ _id: id }).exec((error, result) => {
+          if (error) return res.status(400).json({ error });
+          if (result) {
+            res
+              .status(202)
+              .json({ message: "Data has been deleted", result: result });
+          }
+        });
+      }
     } else {
       res.status(400).json({ error: `Params required ${error.message}` });
     }
@@ -81,7 +112,8 @@ exports.getNewsPressBanners = async (req, res) => {
   const page = parseInt(req.query.page) || 1; // Set a default page number of 1
 
   try {
-    const PageBanner = await NewsPressBanner.find({}).sort({ _id: -1 })
+    const PageBanner = await NewsPressBanner.find({})
+      .sort({ _id: -1 })
       .limit(limit)
       .skip(limit * page - limit);
 
@@ -112,10 +144,11 @@ exports.updateNewsPressBanner = async (req, res) => {
     } = req.body;
 
     const bannerImage = req.files["bannerImage"]
-      ? req.files["bannerImage"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
+
     const bannerImageText = req.files["bannerImageText"]
-      ? req.files["bannerImageText"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
       : undefined;
 
     const pageBanner = {

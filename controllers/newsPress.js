@@ -1,9 +1,9 @@
 const NewsPress = require("../models/newsPress");
 const slugify = require("slugify");
 // let sortBy = require("lodash.sortby");
-
+const path = require("path");
+const fs = require("fs");
 exports.addNewsPress = (req, res) => {
-                                            
   try {
     const newsPressObj = {
       title: req.body.title,
@@ -14,7 +14,7 @@ exports.addNewsPress = (req, res) => {
     };
 
     if (req.file) {
-      newsPressObj.image = req.file.location;
+      newsPressObj.image = process.env.API + "/public/" + req.file.filename;
     }
 
     const newspress = new NewsPress(newsPressObj);
@@ -48,16 +48,30 @@ exports.getNewsPressDetailsById = (req, res) => {
   }
 };
 
-exports.deleteNewsPressById = (req, res) => {
+exports.deleteNewsPressById = async (req, res) => {
   try {
     const { id } = req.body;
     if (id) {
-      NewsPress.deleteOne({ _id: id }).exec((error, result) => {
-        if (error) return res.status(400).json({ error });
-        if (result) {
-          res.status(202).json({ message: "Data has been deleted", result });
-        }
-      });
+      const response = await NewsPress.findOne({ _id: id });
+
+      if (response) {
+        let newBannerImage = response?.image.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
+        fs.unlink(imagepath1, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+        NewsPress.deleteOne({ _id: id }).exec((error, result) => {
+          if (error) return res.status(400).json({ error });
+          if (result) {
+            res.status(202).json({ message: "Data has been deleted", result });
+          }
+        });
+      }
     } else {
       res.status(400).json({ error: `Params required ${error.message}` });
     }
@@ -88,7 +102,8 @@ exports.getNewsPress = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
     const page = parseInt(req.query.page) || 1; // Set a default page number of 1
 
-    const newsP = await NewsPress.find({}).sort({ _id: -1 })
+    const newsP = await NewsPress.find({})
+      .sort({ _id: -1 })
       .limit(limit)
       .skip(limit * page - limit);
 
@@ -115,7 +130,7 @@ exports.updateNewsPress = async (req, res) => {
 
     const newsPress = {};
     if (req.file) {
-      newsPress.image = req.file.location;
+      newsPress.image = process.env.API + "/public/" + req.file.filename;
     }
     if (title) {
       newsPress.title = title;

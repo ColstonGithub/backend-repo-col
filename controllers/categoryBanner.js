@@ -1,33 +1,21 @@
 const CategoryBanner = require("../models/categoryBanner");
 const shortid = require("shortid");
 const slugify = require("slugify");
-
+const path = require("path");
+const fs = require("fs");
 exports.createCategoryBanner = (req, res) => {
   try {
-    const {
-      title,
- //     buttonText,
-      bannerImageAltText,
- //     bannerImageTextAltText,
-      categoryId,
-    } = req.body;
+    const { title, bannerImageAltText, categoryId } = req.body;
 
-    const bannerImage = req.files["bannerImage"]
-      ? req.files["bannerImage"][0].location
+    const bannerImage = req.file["bannerImage"]
+      ? process.env.API + "/public/" + req.file["bannerImage"][0].filename
       : undefined;
-
-    // const bannerImageText = req.files["bannerImageText"]
-    //   ? req.files["bannerImageText"][0].location
-    //   : undefined;
 
     const catbanner = new CategoryBanner({
       title,
       slug: slugify(title),
       bannerImage,
-    //  bannerImageText,
       bannerImageAltText,
-    //  bannerImageTextAltText,
-    //  buttonText,
       categoryId,
       createdBy: req.user._id,
     });
@@ -84,12 +72,28 @@ exports.deleteCategoryBannerById = async (req, res) => {
   try {
     const { id } = req.body;
     if (id) {
-      await CategoryBanner.deleteOne({ _id: id }).exec((error, result) => {
-        if (error) return res.status(400).json({ error });
-        if (result) {
-          res.status(202).json({ result });
-        }
-      });
+      const response = await CategoryBanner.findOne({ _id: id });
+
+      if (response) {
+        let newBannerImage = response?.bannerImage.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
+
+        fs.unlink(imagepath1, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+
+        await CategoryBanner.deleteOne({ _id: id }).exec((error, result) => {
+          if (error) return res.status(400).json({ error });
+          if (result) {
+            res.status(202).json({ result });
+          }
+        });
+      }
     } else {
       res.status(400).json({ error: "Params required" });
     }
@@ -103,7 +107,8 @@ exports.getCategoryBanners = async (req, res) => {
   const page = parseInt(req.query.page) || 1; // Set a default page number of 1
 
   try {
-    const Catbanner = await CategoryBanner.find({}).sort({ _id: -1 })
+    const Catbanner = await CategoryBanner.find({})
+      .sort({ _id: -1 })
       .limit(limit)
       .skip(limit * page - limit);
 
@@ -125,41 +130,22 @@ exports.getCategoryBanners = async (req, res) => {
 
 exports.updateCategoryBanner = async (req, res) => {
   try {
-    const {
-      _id,
-      title,
-    //  buttonText,
-      bannerImageAltText,
-   //   bannerImageTextAltText,
-      categoryId,
-    } = req.body;
+    const { _id, title, bannerImageAltText, categoryId } = req.body;
 
     const bannerImage = req.files["bannerImage"]
-      ? req.files["bannerImage"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
-    // const bannerImageText = req.files["bannerImageText"]
-    //   ? req.files["bannerImageText"][0].location
-    //   : undefined;
 
     const categoryBanner = {
       createdBy: req.user._id,
     };
-    // if (bannerImageText != undefined) {
-    //   categoryBanner.bannerImageText = bannerImageText;
-    // }
-    if (bannerImage != undefined) {
+
+    if (bannerImage != undefined && bannerImage != "") {
       categoryBanner.bannerImage = bannerImage;
     }
     if (bannerImageAltText != undefined) {
       categoryBanner.bannerImageAltText = bannerImageAltText;
     }
-    // if (bannerImageTextAltText != undefined) {
-    //   categoryBanner.bannerImageTextAltText = bannerImageTextAltText;
-    // }
-
-    // if (buttonText != undefined) {
-    //   categoryBanner.buttonText = buttonText;
-    // }
 
     if (title != undefined) {
       categoryBanner.title = title;

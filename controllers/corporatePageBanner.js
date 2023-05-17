@@ -1,31 +1,37 @@
 const CorporatePageBanner = require("../models/corporatePageBanner");
 const shortid = require("shortid");
 const slugify = require("slugify");
-
+const path = require("path");
+const fs = require("fs");
 exports.createCorporatePageBanner = (req, res) => {
   try {
     const { title, bannerImageAltText, bannerImageTextAltText } = req.body;
 
     const bannerImage = req.files["bannerImage"]
-      ? req.files["bannerImage"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
 
     const bannerImageText = req.files["bannerImageText"]
-      ? req.files["bannerImageText"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
       : undefined;
 
     const PageBanner = new CorporatePageBanner({
       title,
       slug: slugify(title),
-      bannerImage,
-      bannerImageAltText,
       createdBy: req.user._id,
     });
+
+    if (bannerImageAltText != undefined) {
+      PageBanner.bannerImageAltText = bannerImageAltText;
+    }
     if (bannerImageTextAltText != undefined) {
       PageBanner.bannerImageTextAltText = bannerImageTextAltText;
     }
     if (bannerImageText != undefined) {
       PageBanner.bannerImageText = bannerImageText;
+    }
+    if (bannerImage != undefined) {
+      PageBanner.bannerImage = bannerImage;
     }
     PageBanner.save((error, banner) => {
       if (error) return res.status(400).json({ error });
@@ -63,14 +69,46 @@ exports.deleteCorporatePageBannerById = async (req, res) => {
   try {
     const { id } = req.body;
     if (id) {
-      await CorporatePageBanner.deleteOne({ _id: id }).exec((error, result) => {
-        if (error) return res.status(400).json({ error });
-        if (result) {
-          res
-            .status(202)
-            .json({ message: "Data has been deleted", result: result });
-        }
-      });
+      const response = await CorporatePageBanner.findOne({ _id: id });
+
+      if (response) {
+        let newBannerImage = response?.bannerImage.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+        let newBannerImageText = response?.bannerImageText.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+
+        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
+        const imagepath2 = path.join(
+          __dirname,
+          "../uploads",
+          newBannerImageText
+        );
+        fs.unlink(imagepath1, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+        fs.unlink(imagepath2, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+
+        await CorporatePageBanner.deleteOne({ _id: id }).exec(
+          (error, result) => {
+            if (error) return res.status(400).json({ error });
+            if (result) {
+              res
+                .status(202)
+                .json({ message: "Data has been deleted", result: result });
+            }
+          }
+        );
+      }
     } else {
       res.status(400).json({ error: `Params required ${error.message}` });
     }
@@ -116,10 +154,11 @@ exports.updateCorporatePageBanner = async (req, res) => {
     } = req.body;
 
     const bannerImage = req.files["bannerImage"]
-      ? req.files["bannerImage"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
+
     const bannerImageText = req.files["bannerImageText"]
-      ? req.files["bannerImageText"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
       : undefined;
 
     const pageBanner = {
@@ -135,7 +174,7 @@ exports.updateCorporatePageBanner = async (req, res) => {
       pageBanner.bannerImageAltText = bannerImageAltText;
     }
     if (bannerImageTextAltText != undefined) {
-      pageBanner.bannerImageTextAltText =bannerImageTextAltText;
+      pageBanner.bannerImageTextAltText = bannerImageTextAltText;
     }
 
     if (buttonText != undefined) {

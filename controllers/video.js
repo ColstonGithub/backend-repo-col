@@ -1,17 +1,18 @@
 const Video = require("../models/video");
 const shortid = require("shortid");
 const slugify = require("slugify");
-
+const path = require("path");
+const fs = require("fs");
 exports.createVideo = (req, res) => {
   try {
     const { title, metaData } = req.body;
 
     const video = req.files["video"]
-      ? req.files["video"][0].location
+      ? process.env.API + "/public/" + req.files["video"][0].filename
       : undefined;
 
     const poster = req.files["poster"]
-      ? req.files["poster"][0].location
+      ? process.env.API + "/public/" + req.files["poster"][0].filename
       : undefined;
 
     const videoData = new Video({
@@ -59,14 +60,44 @@ exports.deleteVideoById = async (req, res) => {
   try {
     const { id } = req.body;
     if (id) {
-      await Video.deleteOne({ _id: id }).exec((error, result) => {
-        if (error) return res.status(400).json({ error });
-        if (result) {
-          res
-            .status(202)
-            .json({ message: "Data has been deleted", result: result });
-        }
-      });
+      const response = await Video.findOne({ _id: id });
+
+      if (response) {
+        let newBannerImage = response?.video.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+        let newBannerImageText = response?.poster.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+
+        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
+        const imagepath2 = path.join(
+          __dirname,
+          "../uploads",
+          newBannerImageText
+        );
+        fs.unlink(imagepath1, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+        fs.unlink(imagepath2, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+
+        await Video.deleteOne({ _id: id }).exec((error, result) => {
+          if (error) return res.status(400).json({ error });
+          if (result) {
+            res
+              .status(202)
+              .json({ message: "Data has been deleted", result: result });
+          }
+        });
+      }
     } else {
       res.status(400).json({ error: `Params required ${error.message}` });
     }
@@ -106,11 +137,11 @@ exports.updateVideo = async (req, res) => {
     const { _id, title, metaData } = req.body;
 
     const video = req.files["video"]
-      ? req.files["video"][0].location
+      ? process.env.API + "/public/" + req.files["video"][0].filename
       : undefined;
 
     const poster = req.files["poster"]
-      ? req.files["poster"][0].location
+      ? process.env.API + "/public/" + req.files["poster"][0].filename
       : undefined;
 
     const videoData = {
@@ -134,13 +165,9 @@ exports.updateVideo = async (req, res) => {
       videoData.slug = slugify(title);
     }
 
-    const updatedVideoData = await Video.findOneAndUpdate(
-      { _id },
-      videoData,
-      {
-        new: true,
-      }
-    );
+    const updatedVideoData = await Video.findOneAndUpdate({ _id }, videoData, {
+      new: true,
+    });
     return res.status(201).json({ updatedVideoData });
   } catch (err) {
     res.status(500).json({ error: err.message });

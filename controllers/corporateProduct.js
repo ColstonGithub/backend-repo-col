@@ -2,7 +2,8 @@ const CorporateProduct = require("../models/corporateProduct");
 const slugify = require("slugify");
 const c = require("config");
 // let sortBy = require("lodash.sortby");
-
+const path = require("path");
+const fs = require("fs");
 exports.addCorporateProduct = (req, res) => {
   try {
     const corporateObj = {
@@ -14,7 +15,7 @@ exports.addCorporateProduct = (req, res) => {
     };
 
     if (req.file) {
-      corporateObj.image = req.file.location;
+      corporateObj.image = process.env.API + "/public/" + req.file.filename;
     }
 
     const corporate = new CorporateProduct(corporateObj);
@@ -51,12 +52,29 @@ exports.deleteCorporateProductById = async (req, res) => {
   try {
     const { id } = req.body;
     if (id) {
-      await CorporateProduct.deleteOne({ _id: id }).exec((error, result) => {
-        if (error) return res.status(400).json({ error });
-        if (result) {
-          res.status(202).json({ result, message: "Data has been deleted" });
-        }
-      });
+      const response = await CorporateProduct.findOne({ _id: id });
+
+      if (response) {
+        let newBannerImage = response?.image.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+
+        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
+
+        fs.unlink(imagepath1, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+
+        await CorporateProduct.deleteOne({ _id: id }).exec((error, result) => {
+          if (error) return res.status(400).json({ error });
+          if (result) {
+            res.status(202).json({ result, message: "Data has been deleted" });
+          }
+        });
+      }
     } else {
       res.status(400).json({ error: "Params required" });
     }
@@ -113,7 +131,7 @@ exports.updateCorporateProduct = async (req, res) => {
 
     const corporateProduct = {};
     if (req.file) {
-      corporateProduct.image = file.location;
+      corporateProduct.image = process.env.API + "/public/" + req.file.filename;
     }
 
     if (title) {

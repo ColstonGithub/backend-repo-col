@@ -1,7 +1,8 @@
 const Catalogue = require("../models/catalogue");
 const slugify = require("slugify");
 // let sortBy = require("lodash.sortby");
-
+const path = require("path");
+const fs = require("fs");
 exports.addCatalogue = (req, res) => {
   try {
     const catalogueObj = {
@@ -11,14 +12,20 @@ exports.addCatalogue = (req, res) => {
       createdBy: req.user._id,
     };
 
-    catalogueObj.pdf = req.files["pdf"]
-      ? req.files["pdf"][0].location
+    const pdf = req.files["pdf"]
+      ? process.env.API + "/public/" + req.files["pdf"][0].filename
       : undefined;
 
-    if (req.files) {
-      catalogueObj.image = req.files["image"]
-        ? req.files["image"][0].location
-        : undefined;
+    const image = req.files["image"]
+      ? process.env.API + "/public/" + req.files["image"][0].filename
+      : undefined;
+
+    if (pdf && pdf != undefined) {
+      catalogueObj.pdf = pdf;
+    }
+
+    if (image && image != undefined) {
+      catalogueObj.image = image;
     }
     const catalogue = new Catalogue(catalogueObj);
 
@@ -55,12 +62,35 @@ exports.deleteCatalogueById = async (req, res) => {
   try {
     const { id } = req.body;
     if (id) {
-      await Catalogue.deleteOne({ _id: id }).exec((error, result) => {
-        if (error) return res.status(400).json({ error });
-        if (result) {
-          res.status(202).json({ message: "Data has been deleted", result });
-        }
-      });
+      const response = await Catalogue.findOne({ _id: id });
+      
+      if (response) {
+        
+        let newBannerImage = response?.image.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+        let pdf = response?.pdf.replace("http://localhost:5000/public/", "");
+        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
+        const imagepath2 = path.join(__dirname, "../uploads", pdf);
+        fs.unlink(imagepath1, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+        fs.unlink(imagepath2, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+
+        await Catalogue.deleteOne({ _id: id }).exec((error, result) => {
+          if (error) return res.status(400).json({ error });
+          if (result) {
+            res.status(202).json({ message: "Data has been deleted", result });
+          }
+        });
+      }
     } else {
       res.status(400).json({ error: `Params required ${error.message}` });
     }
@@ -119,18 +149,18 @@ exports.updateCatalogue = async (req, res) => {
 
     const catalogue = {};
 
-    const pdf = req.files["pdf"] ? req.files["pdf"][0].location : undefined;
+    const pdf = req.files["pdf"]
+      ? process.env.API + "/public/" + req.files["pdf"][0].filename
+      : undefined;
+
+    const catImage = req.files["image"]
+      ? process.env.API + "/public/" + req.files["image"][0].filename
+      : undefined;
 
     if (pdf != undefined && pdf != "") {
       catalogue.pdf = pdf;
     }
 
-    const catImage = "";
-    if (req.files) {
-      catImage = req.files["image"]
-        ? req.files["image"][0].location
-        : undefined;
-    }
     if (title != undefined && title != "") {
       catalogue.title = title;
       catalogue.slug = slugify(req.body.title);

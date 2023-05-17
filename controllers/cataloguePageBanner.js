@@ -1,17 +1,18 @@
 const CataloguePageBanner = require("../models/cataloguePageBanner");
 const shortid = require("shortid");
 const slugify = require("slugify");
-
+const path = require("path");
+const fs = require("fs");
 exports.createCataloguePageBanner = (req, res) => {
   try {
     const { title, bannerImageAltText, bannerImageTextAltText } = req.body;
 
     const bannerImage = req.files["bannerImage"]
-      ? req.files["bannerImage"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
 
     const bannerImageText = req.files["bannerImageText"]
-      ? req.files["bannerImageText"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
 
     const cataloguePageBanner = new CataloguePageBanner({
@@ -22,10 +23,16 @@ exports.createCataloguePageBanner = (req, res) => {
       createdBy: req.user._id,
     });
     if (bannerImageTextAltText != undefined) {
-        cataloguePageBanner.bannerImageTextAltText = bannerImageTextAltText;
+      cataloguePageBanner.bannerImageTextAltText = bannerImageTextAltText;
     }
     if (bannerImageText != undefined) {
-        cataloguePageBanner.bannerImageText = bannerImageText;
+      cataloguePageBanner.bannerImageText = bannerImageText;
+    }
+    if (bannerImage != undefined) {
+      cataloguePageBanner.bannerImage = bannerImage;
+    }
+    if (bannerImageAltText != undefined) {
+      cataloguePageBanner.bannerImageAltText = bannerImageAltText;
     }
     cataloguePageBanner.save((error, banner) => {
       if (error) return res.status(400).json({ error });
@@ -63,14 +70,46 @@ exports.deleteCataloguePageBannerById = async (req, res) => {
   try {
     const { id } = req.body;
     if (id) {
-      await CataloguePageBanner.deleteOne({ _id: id }).exec((error, result) => {
-        if (error) return res.status(400).json({ error });
-        if (result) {
-          res
-            .status(202)
-            .json({ message: "Data has been deleted", result: result });
-        }
-      });
+      const response = await CataloguePageBanner.findOne({ _id: id });
+
+      if (response) {
+        let newBannerImage = response?.bannerImage.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+        let newBannerImageText = response?.bannerImageText.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+
+        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
+        const imagepath2 = path.join(
+          __dirname,
+          "../uploads",
+          newBannerImageText
+        );
+        fs.unlink(imagepath1, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+        fs.unlink(imagepath2, (error) => {
+          if (error) {
+            console.error(error);
+          }
+        });
+
+        await CataloguePageBanner.deleteOne({ _id: id }).exec(
+          (error, result) => {
+            if (error) return res.status(400).json({ error });
+            if (result) {
+              res
+                .status(202)
+                .json({ message: "Data has been deleted", result: result });
+            }
+          }
+        );
+      }
     } else {
       res.status(400).json({ error: `Params required ${error.message}` });
     }
@@ -116,10 +155,11 @@ exports.updateCataloguePageBanner = async (req, res) => {
     } = req.body;
 
     const bannerImage = req.files["bannerImage"]
-      ? req.files["bannerImage"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
+
     const bannerImageText = req.files["bannerImageText"]
-      ? req.files["bannerImageText"][0].location
+      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
 
     const pageBanner = {
