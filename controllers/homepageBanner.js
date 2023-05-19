@@ -5,29 +5,23 @@ const path = require("path");
 const fs = require("fs");
 exports.createBanner = (req, res) => {
   try {
-    const { title } = req.body;
+    const { title, imageAltText } = req.body;
 
-    let banners = [];
+    const banner = req.file
+      ? process.env.API + "/public/" + req.file.filename
+      : undefined;
 
-    if (req.files) {
-      banners = req.files.map((file, index) => {
-        return {
-          img: process.env.API + "/public/" + file.filename,
-          imageAltText: req.body.imageAltText[index],
-        };
-      });
-    }
-
-    const banner = new Banner({
+    const bannerData = new Banner({
       title: title,
       slug: slugify(title),
-      banners,
+      banner,
+      imageAltText,
       createdBy: req.user._id,
     });
-    banner.save((error, ban) => {
+    bannerData.save((error, bannerImage) => {
       if (error) return res.status(400).json({ message: error.message });
-      if (ban) {
-        res.status(201).json({ banner: ban, files: req.files });
+      if (bannerImage) {
+        res.status(201).json({ banners: bannerImage, files: req.files });
       }
     });
   } catch (err) {
@@ -79,19 +73,18 @@ exports.deleteBannerById = async (req, res) => {
       const response = await Banner.findOne({ _id: bannerId });
 
       if (response) {
-        response.banners.forEach((banner) => {
-          let newValue = banner.img.replace(
-            "http://localhost:5000/public/",
-            ""
-          );
-          const imagePath = path.join(__dirname, "../uploads", newValue);
-          fs.unlink(imagePath, (error) => {
-            if (error) {
-              console.error(`Error deleting image file: ${error}`);
-            } else {
-              console.log(`Image file ${imagePath} deleted successfully.`);
-            }
-          });
+        let newBannerImage = response?.banner.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
+        const imagePath1 = path.join(__dirname, "../uploads", newBannerImage);
+
+        fs.unlink(imagePath1, (error) => {
+          if (error) {
+            console.error(`Error deleting image file: ${error}`);
+          } else {
+            console.log(`Image file ${imagePath1} deleted successfully.`);
+          }
         });
 
         Banner.deleteOne({ _id: bannerId }).exec((error, result) => {
@@ -137,26 +130,26 @@ exports.getBanners = async (req, res) => {
 
 exports.updateBanner = async (req, res) => {
   try {
-    const { _id, title } = req.body;
-    let banners = [];
+    const { _id, title, imageAltText } = req.body;
 
-    if (req.files) {
-      banners = req.files.map((file, index) => {
-        return {
-          img: process.env.API + "/public/" + file.filename,
-          imageAltText: req.body.imageAltText[index],
-        };
-      });
-    }
-    const banner = {
-      title,
-      slug: slugify(title),
+    const banner = req.file
+      ? process.env.API + "/public/" + req.file.filename
+      : undefined;
+
+    const bannerData = {
       createdBy: req.user._id,
     };
-    if (banners != [] && banners.length > 0) {
-      banner.banners = banners;
+    if (title != undefined) {
+      bannerData.title = title;
+      bannerData.slug = slugify(title);
     }
-    const updatedBanner = await Banner.findOneAndUpdate({ _id }, banner, {
+    if (banner != undefined) {
+      bannerData.banner = banner;
+    }
+    if (imageAltText != undefined) {
+      bannerData.imageAltText = imageAltText;
+    }
+    const updatedBanner = await Banner.findOneAndUpdate({ _id }, bannerData, {
       new: true,
     });
     return res.status(201).json({ updatedBanner });

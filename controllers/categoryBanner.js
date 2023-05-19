@@ -6,11 +6,9 @@ const fs = require("fs");
 exports.createCategoryBanner = (req, res) => {
   try {
     const { title, bannerImageAltText, categoryId } = req.body;
-
-    const bannerImage = req.file["bannerImage"]
-      ? process.env.API + "/public/" + req.file["bannerImage"][0].filename
+    const bannerImage = req.file
+      ? process.env.API + "/public/" + req.file.filename
       : undefined;
-
     const catbanner = new CategoryBanner({
       title,
       slug: slugify(title),
@@ -34,7 +32,6 @@ exports.createCategoryBanner = (req, res) => {
 exports.getCategoryBannersBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-    //console.log(slug)
     await CategoryBanner.findOne({ slug: slug })
       .select("_id categoryId bannerImage title slug")
       .exec((error, categorybanner) => {
@@ -132,8 +129,8 @@ exports.updateCategoryBanner = async (req, res) => {
   try {
     const { _id, title, bannerImageAltText, categoryId } = req.body;
 
-    const bannerImage = req.files["bannerImage"]
-      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
+    const bannerImage = req.file
+      ? process.env.API + "/public/" + req.file.filename
       : undefined;
 
     const categoryBanner = {

@@ -8,7 +8,7 @@ const {
 } = require("../common-middleware");
 
 const {
-createCategoryBanner,
+  createCategoryBanner,
   getCategoryBannerById,
   getCategoryBannersBySlug,
   deleteCategoryBannerById,
@@ -16,15 +16,11 @@ createCategoryBanner,
   updateCategoryBanner,
 } = require("../controllers/categoryBanner");
 
-
-
 router.post(
   "/categorybanner/create",
   requireSignin,
   adminMiddleware,
-  upload.fields([
-    { name: "bannerImage", maxCount: 1 },
-  ]),
+  upload.single("bannerImage"),
   createCategoryBanner
 );
 
@@ -37,25 +33,16 @@ router.post(
   requireSignin,
   adminMiddleware,
   deleteCategoryBannerById
- );
-
-router.post(
-  "/categorybanner/getcategorybanners",
-  getCategoryBanners
 );
 
+router.post("/categorybanner/getcategorybanners", getCategoryBanners);
 
 router.patch(
   "/categorybanner/update",
   requireSignin,
   adminMiddleware,
-  
-  upload.fields([
-    { name: "bannerImage", maxCount: 1 },
-  ]),
+  upload.single("bannerImage"),
   updateCategoryBanner
 );
 
-
 module.exports = router;
-

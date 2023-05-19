@@ -14,9 +14,6 @@ const categorySchema = new mongoose.Schema(
     keyword : {
       type:String,
     },
-    type: {
-      type: String,
-    },
     categoryImage: { type: String },
     imageAltText: {
       type: String,

@@ -20,7 +20,7 @@ router.post(
   "/banner/create",
   requireSignin,
   adminMiddleware,
-  upload.array("banner"),
+  upload.single("banner"),
   //upload.array("banner"),
   createBanner
 );
@@ -42,7 +42,7 @@ router.patch(
   "/banner/update",
   requireSignin,
   adminMiddleware,
-  upload.array("banner"),
+  upload.single("banner"),
   updateBanner
 );
 

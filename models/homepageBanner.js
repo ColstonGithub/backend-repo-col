@@ -11,17 +11,11 @@ const homepageBannerSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    banners: [
-      {
-        img: {
-          type: String,
-          required: true,
-        },
-        imageAltText: {
-          type: String,
-        },
-      },
-    ],
+    banner: { type: String },
+    imageAltText: {
+      type: String,
+      trim: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

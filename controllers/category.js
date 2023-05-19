@@ -107,8 +107,8 @@ exports.updateCategories = async (req, res) => {
   try {
     const { _id, name, parentId, keyword, imageAltText } = req.body;
 
-    const categoryImage = req.file["categoryImage"]
-      ? process.env.API + "/public/" + req.file["categoryImage"][0].filename
+    const categoryImage = req.file
+      ? process.env.API + "/public/" + req.file.filename
       : undefined;
 
     const updatedCategories = [];
