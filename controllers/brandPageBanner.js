@@ -6,23 +6,17 @@ const path = require("path");
 
 exports.createBrandPageBanner = (req, res) => {
   try {
-    const { title, bannerImageAltText, bannerImageTextAltText } = req.body;
+    const { title, bannerImageAltText } = req.body;
 
-    const bannerImage = req.files["bannerImage"]
-      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
-      : undefined;
-
-    const bannerImageText = req.files["bannerImageText"]
-      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
+    const bannerImage = req.file
+      ? process.env.API + "/public/" + req.file.filename
       : undefined;
 
     const brandPageBanner = new BrandPageBanner({
       title,
       slug: slugify(title),
       bannerImage,
-      bannerImageText,
       bannerImageAltText,
-      bannerImageTextAltText,
       createdBy: req.user._id,
     });
 
@@ -62,7 +56,6 @@ exports.deleteBrandPageBannerById = async (req, res) => {
   try {
     const { id } = req.body;
     if (id) {
-
       const response = await BrandPageBanner.findOne({ _id: id });
 
       if (response) {
@@ -70,37 +63,24 @@ exports.deleteBrandPageBannerById = async (req, res) => {
           "http://localhost:5000/public/",
           ""
         );
-        let newBannerImageText = response?.bannerImageText.replace(
-          "http://localhost:5000/public/",
-          ""
-        );
 
         const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
-        const imagepath2 = path.join(
-          __dirname,
-          "../uploads",
-          newBannerImageText
-        );
+
         fs.unlink(imagepath1, (error) => {
           if (error) {
             console.error(error);
           }
         });
-        fs.unlink(imagepath2, (error) => {
-          if (error) {
-            console.error(error);
+
+        await BrandPageBanner.deleteOne({ _id: id }).exec((error, result) => {
+          if (error) return res.status(400).json({ error });
+          if (result) {
+            res
+              .status(202)
+              .json({ message: "Data has been deleted", result: result });
           }
         });
-
-      await BrandPageBanner.deleteOne({ _id: id }).exec((error, result) => {
-        if (error) return res.status(400).json({ error });
-        if (result) {
-          res
-            .status(202)
-            .json({ message: "Data has been deleted", result: result });
-        }
-      });
-    }
+      }
     } else {
       res.status(400).json({ error: `Params required ${error.message}` });
     }
@@ -137,40 +117,21 @@ exports.getBrandPageBanners = async (req, res) => {
 
 exports.updateBrandPageBanner = async (req, res) => {
   try {
-    const {
-      _id,
-      title,
-      buttonText,
-      bannerImageAltText,
-      bannerImageTextAltText,
-    } = req.body;
+    const { _id, title, bannerImageAltText } = req.body;
 
-    const bannerImage = req.files["bannerImage"]
-      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
-      : undefined;
-
-    const bannerImageText = req.files["bannerImageText"]
-      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
+    const bannerImage = req.file
+      ? process.env.API + "/public/" + req.file.filename
       : undefined;
 
     const pageBanner = {
       createdBy: req.user._id,
     };
-    if (bannerImageText != undefined) {
-      pageBanner.bannerImageText = bannerImageText;
-    }
+
     if (bannerImage != undefined) {
       pageBanner.bannerImage = bannerImage;
     }
     if (bannerImageAltText != undefined) {
       pageBanner.bannerImageAltText = bannerImageAltText;
-    }
-    if (bannerImageTextAltText != undefined) {
-      pageBanner.bannerImageTextAltText = bannerImageTextAltText;
-    }
-
-    if (buttonText != undefined) {
-      pageBanner.buttonText = buttonText;
     }
 
     if (title != undefined) {

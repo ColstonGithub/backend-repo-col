@@ -5,23 +5,17 @@ const path = require("path");
 const fs = require("fs");
 exports.createNewsPressBanner = (req, res) => {
   try {
-    const { title, bannerImageAltText, bannerImageTextAltText } = req.body;
+    const { title, bannerImageAltText } = req.body;
 
     const bannerImage = req.files["bannerImage"]
       ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
-      : undefined;
-
-    const bannerImageText = req.files["bannerImageText"]
-      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
       : undefined;
 
     const PageBanner = new NewsPressBanner({
       title,
       slug: slugify(title),
       bannerImage,
-      bannerImageText,
       bannerImageAltText,
-      bannerImageTextAltText,
       createdBy: req.user._id,
     });
 
@@ -68,23 +62,8 @@ exports.deleteNewsPressBannerById = async (req, res) => {
           "http://localhost:5000/public/",
           ""
         );
-        let newBannerImageText = response?.bannerImageText.replace(
-          "http://localhost:5000/public/",
-          ""
-        );
-
         const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
-        const imagepath2 = path.join(
-          __dirname,
-          "../uploads",
-          newBannerImageText
-        );
         fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
-        fs.unlink(imagepath2, (error) => {
           if (error) {
             console.error(error);
           }
@@ -138,37 +117,21 @@ exports.updateNewsPressBanner = async (req, res) => {
     const {
       _id,
       title,
-      buttonText,
       bannerImageAltText,
-      bannerImageTextAltText,
     } = req.body;
 
     const bannerImage = req.files["bannerImage"]
       ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
 
-    const bannerImageText = req.files["bannerImageText"]
-      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
-      : undefined;
-
     const pageBanner = {
       createdBy: req.user._id,
     };
-    if (bannerImageText != undefined) {
-      pageBanner.bannerImageText = bannerImageText;
-    }
     if (bannerImage != undefined) {
       pageBanner.bannerImage = bannerImage;
     }
     if (bannerImageAltText != undefined) {
       pageBanner.bannerImageAltText = bannerImageAltText;
-    }
-    if (bannerImageTextAltText != undefined) {
-      pageBanner.bannerImageTextAltText = bannerImageTextAltText;
-    }
-
-    if (buttonText != undefined) {
-      pageBanner.buttonText = buttonText;
     }
 
     if (title != undefined) {

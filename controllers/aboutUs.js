@@ -5,14 +5,9 @@ const fs = require("fs");
 const path = require("path");
 exports.createAboutUs = (req, res) => {
   try {
-    const { text, heading, bannerImageAltText, bannerImageTextAltText, title } =
-      req.body;
+    const { text, heading, bannerImageAltText, title } = req.body;
     const bannerImage = req.files["bannerImage"]
       ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
-      : undefined;
-
-    const bannerImageText = req.files["bannerImageText"]
-      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
       : undefined;
 
     const aboutUsData = new AboutUs({
@@ -20,9 +15,7 @@ exports.createAboutUs = (req, res) => {
       slug: slugify(title),
       heading,
       bannerImage,
-      bannerImageText,
       bannerImageAltText,
-      bannerImageTextAltText,
       text,
       createdBy: req.user._id,
     });
@@ -70,23 +63,8 @@ exports.deleteAboutUsById = async (req, res) => {
           "http://localhost:5000/public/",
           ""
         );
-        let newBannerImageText = response?.bannerImageText.replace(
-          "http://localhost:5000/public/",
-          ""
-        );
-
         const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
-        const imagepath2 = path.join(
-          __dirname,
-          "../uploads",
-          newBannerImageText
-        );
         fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
-        fs.unlink(imagepath2, (error) => {
           if (error) {
             console.error(error);
           }
@@ -112,7 +90,6 @@ exports.deleteAboutUsById = async (req, res) => {
 exports.getAboutUs = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
   const page = parseInt(req.query.page) || 1; // Set a default page number of 1
-
   try {
     const aboutUsData = await AboutUs.find({})
       .sort({ _id: -1 })
@@ -137,29 +114,16 @@ exports.getAboutUs = async (req, res) => {
 
 exports.updateAboutUs = async (req, res) => {
   try {
-    const {
-      _id,
-      text,
-      heading,
-      bannerImageTextAltText,
-      bannerImageAltText,
-      title,
-    } = req.body;
+    const { _id, text, heading, bannerImageAltText, title } = req.body;
 
     const bannerImage = req.files["bannerImage"]
       ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
-    const bannerImageText = req.files["bannerImageText"]
-      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
-      : undefined;
-
+      
     const aboutUsData = {
       createdBy: req.user._id,
     };
 
-    if (bannerImageText != undefined && bannerImageText != "") {
-      aboutUsData.bannerImageText = bannerImageText;
-    }
     if (bannerImage != undefined && bannerImage != "") {
       aboutUsData.bannerImage = bannerImage;
     }
@@ -173,9 +137,6 @@ exports.updateAboutUs = async (req, res) => {
 
     if (bannerImageAltText != undefined && bannerImageAltText != "") {
       aboutUsData.bannerImageAltText = bannerImageAltText;
-    }
-    if (bannerImageTextAltText != undefined && bannerImageTextAltText != "") {
-      aboutUsData.bannerImageTextAltText = bannerImageTextAltText;
     }
 
     if (title != undefined && title != "") {

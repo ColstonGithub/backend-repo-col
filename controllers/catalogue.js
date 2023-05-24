@@ -63,9 +63,8 @@ exports.deleteCatalogueById = async (req, res) => {
     const { id } = req.body;
     if (id) {
       const response = await Catalogue.findOne({ _id: id });
-      
+
       if (response) {
-        
         let newBannerImage = response?.image.replace(
           "http://localhost:5000/public/",
           ""
@@ -166,7 +165,7 @@ exports.updateCatalogue = async (req, res) => {
       catalogue.slug = slugify(req.body.title);
     }
     if (catImage != undefined && catImage != "") {
-      catalogue.catImage = catImage;
+      catalogue.image = catImage;
     }
 
     if (imageAltText != undefined && imageAltText != "") {

@@ -28,11 +28,10 @@ const signup = async (req, res) => {
           username: shortid.generate(),
           role,
         });
-
         _user.save((error, data) => {
           if (error) {
             return res.status(400).json({
-              message: "Something went wrong",
+              message: `Something went wrong ${error.message}`,
             });
           }
 
@@ -95,7 +94,6 @@ const signout = async (req, res) => {
   });
 };
 
-
 const getUserData = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -104,8 +102,6 @@ const getUserData = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-
 
 const updateProfile = async (req, res) => {
   const { firstName, lastName, username, contactNumber, password } = req.body;
@@ -154,12 +150,10 @@ const updateProfile = async (req, res) => {
   }
 };
 
-
-
 module.exports = {
   signup,
   signin,
   signout,
   updateProfile,
-  getUserData
+  getUserData,
 };
