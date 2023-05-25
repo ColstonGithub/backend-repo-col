@@ -5,16 +5,16 @@ const path = require("path");
 
 // Set storage engine
 const storage = multer.diskStorage({
-  destination: (req, file, callback) => {
-    callback(null, "uploads/");
+  destination: function (req, file, callback) {
+    callback(null, path.join(path.dirname(__dirname), "uploads"));
   },
-  filename: (req, file, callback) => {
-    callback(null, shortid.generate() + "-" + path.extname(file.originalname));
+  filename: function (req, file, callback) {
+    callback(null, shortid.generate() + "-" + file.originalname);
   },
 });
-
+// Init multer
 const upload = multer({ storage: storage });
-
+// Set JWT Secret
 const requireSignin = async (req, res, next) => {
   if (req.headers.authorization) {
     const token = req.headers.authorization.split(" ")[1];
