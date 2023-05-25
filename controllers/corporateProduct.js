@@ -56,7 +56,7 @@ exports.deleteCorporateProductById = async (req, res) => {
 
       if (response) {
         let newBannerImage = response?.image.replace(
-          "http://localhost:5000/public/",
+          "http://64.227.150.49:5000/public/",
           ""
         );
 

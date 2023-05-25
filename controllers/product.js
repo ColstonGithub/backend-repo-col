@@ -137,7 +137,7 @@ exports.deleteProductById = async (req, res) => {
       const response = await Product.findOne({ _id: productId });
 
       if (response) {
-        let pdf = response?.pdf.replace("http://localhost:5000/public/", "");
+        let pdf = response?.pdf.replace("http://64.227.150.49:5000/public/", "");
 
         const imagepath1 = path.join(__dirname, "../uploads", pdf);
 
@@ -149,7 +149,7 @@ exports.deleteProductById = async (req, res) => {
 
         response.productPictures.map((banner) => {
           let newValue = banner.img.replace(
-            "http://localhost:5000/public/",
+            "http://64.227.150.49:5000/public/",
             ""
           );
           const imagePath2 = path.join(__dirname, "../uploads", newValue);
@@ -164,7 +164,7 @@ exports.deleteProductById = async (req, res) => {
         response.colors.forEach((banner) => {
           banner.productPictures.map((image) => {
             let newValue = image.img.replace(
-              "http://localhost:5000/public/",
+              "http://64.227.150.49:5000/public/",
               ""
             );
             const imagePath3 = path.join(__dirname, "../uploads", newValue);

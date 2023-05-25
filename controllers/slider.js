@@ -66,7 +66,7 @@ exports.deleteSliderById = async (req, res) => {
     if (response) {
       response.sliders.forEach((banner) => {
         let newValue = banner.img.replace(
-          "http://localhost:5000/public/",
+          "http://64.227.150.49:5000/public/",
           ""
         );
         const imagePath = path.join(__dirname, "../uploads", newValue);

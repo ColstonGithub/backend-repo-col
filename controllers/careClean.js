@@ -61,7 +61,7 @@ exports.deleteCareCleanById = async (req, res) => {
 
       if (response) {
         let newBannerImage = response?.bannerImage.replace(
-          "http://localhost:5000/public/",
+          "http://64.227.150.49:5000/public/",
           ""
         );
 

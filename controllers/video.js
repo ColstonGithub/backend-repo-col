@@ -64,11 +64,11 @@ exports.deleteVideoById = async (req, res) => {
 
       if (response) {
         let newBannerImage = response?.video.replace(
-          "http://localhost:5000/public/",
+          "http://64.227.150.49:5000/public/",
           ""
         );
         let newBannerImageText = response?.poster.replace(
-          "http://localhost:5000/public/",
+          "http://64.227.150.49:5000/public/",
           ""
         );
 

@@ -74,7 +74,7 @@ exports.deleteBannerById = async (req, res) => {
 
       if (response) {
         let newBannerImage = response?.banner.replace(
-          "http://localhost:5000/public/",
+          "http://64.227.150.49:5000/public/",
           ""
         );
         const imagePath1 = path.join(__dirname, "../uploads", newBannerImage);
