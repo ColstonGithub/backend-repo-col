@@ -42,7 +42,7 @@ exports.addCategory = (req, res) => {
     };
 
     const image = req.file
-      ? req.file.path
+      ? process.env.API + "/public/" + req.file.filename
       : undefined;
 
     if (image) {
