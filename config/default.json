@@ -1,3 +1,3 @@
 {
-  "dbURI": "mongodb+srv://doadmin:4o315mdMkp9l7s20@colston-web-mongodb-blr1-52085-2b1f7ade.mongo.ondigitalocean.com/admin?tls=true&authSource=admin&replicaSet=colston-web-mongodb-blr1-52085"
+  "dbURI": "mongodb+srv://webgrossdeveloper:Hb04YgQSxOZbueyr@cluster0.b2ynscz.mongodb.net/?retryWrites=true&w=majority"
 }
