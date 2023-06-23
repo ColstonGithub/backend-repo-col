@@ -3,6 +3,21 @@ const FaqCategory = require("../models/faqCategory");
 const shortid = require("shortid");
 const slugify = require("slugify");
 
+function createFaqList(faqs) {
+  const faqsList = [];
+  for (let prod of faqs) {
+    faqsList.push({
+      _id: prod._id,
+      faqCategory: prod.faqCategory,
+      question: prod.question,
+      answer: prod.answer,
+      createdAt: prod.createdAt,
+      createdBy: prod.createdBy,
+    });
+  }
+  return faqsList;
+}
+
 exports.createFaq = (req, res) => {
   try {
     const { faqCategory, question, answer } = req.body;
@@ -66,10 +81,10 @@ exports.deleteFaqById = async (req, res) => {
 };
 
 exports.getFaqs = async (req, res) => {
-  const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
-  const page = parseInt(req.query.page) || 1; // Set a default page number of 1
-
   try {
+    const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
+    const page = parseInt(req.query.page) || 1; // Set a default page number of 1
+
     const faqData = await Faq.find({})
       .sort({ _id: -1 })
       .limit(limit)
@@ -78,9 +93,11 @@ exports.getFaqs = async (req, res) => {
     const count = await Faq.countDocuments().exec();
     const totalPages = Math.ceil(count / limit);
 
+    const faqList = createFaqList(faqData);
+
     if (faqData) {
       res.status(200).json({
-        faqData,
+        faqList,
         pagination: { currentPage: page, totalPages, totalItems: count },
       });
     } else {
@@ -93,39 +110,29 @@ exports.getFaqs = async (req, res) => {
 
 exports.updateFaq = async (req, res) => {
   try {
-    const {
-      _id,
-      answer,
-      question,
-      faqCategory,
-    } = req.body;
+    const { _id, answer, question, faqCategory } = req.body;
 
     const faqData = {
       createdBy: req.user._id,
     };
     if (question != undefined) {
-        faqData.question = question;
+      faqData.question = question;
     }
     if (answer != undefined) {
-        faqData.answer = answer;
+      faqData.answer = answer;
     }
     if (faqCategory != undefined) {
-        faqData.faqCategory = faqCategory;
+      faqData.faqCategory = faqCategory;
     }
 
-    const updatedFaq = await Faq.findOneAndUpdate(
-      { _id },
-      faqData,
-      {
-        new: true,
-      }
-    );
+    const updatedFaq = await Faq.findOneAndUpdate({ _id }, faqData, {
+      new: true,
+    });
     return res.status(201).json({ updatedFaq });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 exports.getFaqsByCategoryId = async (req, res) => {
   const { id } = req.body;
@@ -137,7 +144,7 @@ exports.getFaqsByCategoryId = async (req, res) => {
     const faqs = await Faq.find({ faqCategory: id })
       .sort({ _id: -1 })
       .limit(limit)
-      .skip(limit * page - limit)
+      .skip(limit * page - limit);
 
     const count = await faqs.length;
     const totalPages = Math.ceil(count / limit);
@@ -165,10 +172,9 @@ exports.getSearchFaq = async (req, res) => {
   const page = parseInt(req.query.page) || 1; // Set a default page number of 1
   const searchKeyword = req.query.search;
   try {
-    const faq = await Faq.find({})
-      .sort({ _id: -1 })
-//     .limit(limit)
-//      .skip(limit * page - limit);
+    const faq = await Faq.find({}).sort({ _id: -1 });
+    //     .limit(limit)
+    //      .skip(limit * page - limit);
     const count = await Faq.countDocuments().exec();
     const totalPages = Math.ceil(count / limit);
 
@@ -179,7 +185,7 @@ exports.getSearchFaq = async (req, res) => {
       });
       res.status(200).json({
         products: filteredProducts,
-//        pagination: { currentPage: page, totalPages, totalItems: count },
+        //        pagination: { currentPage: page, totalPages, totalItems: count },
       });
     } else {
       return res.status(400).json({ error: "Search Keyword is undefined" });
