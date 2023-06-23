@@ -66,10 +66,13 @@ exports.deleteCatalogueById = async (req, res) => {
 
       if (response) {
         let newBannerImage = response?.image.replace(
-          "http://64.227.150.49:5000/public/",
+          "http://localhost:5000/public/",
           ""
         );
-        let pdf = response?.pdf.replace("http://64.227.150.49:5000/public/", "");
+        let pdf = response?.pdf.replace(
+          "http://localhost:5000/public/",
+          ""
+        );
         const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
         const imagepath2 = path.join(__dirname, "../uploads", pdf);
         fs.unlink(imagepath1, (error) => {
