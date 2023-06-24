@@ -14,6 +14,7 @@ const storage = multer.diskStorage({
 });
 // Init multer
 const upload = multer({ storage: storage });
+
 // Set JWT Secret
 const requireSignin = async (req, res, next) => {
   if (req.headers.authorization) {

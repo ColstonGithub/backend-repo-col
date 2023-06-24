@@ -3,7 +3,6 @@ const BlogCategory = require("../models/blogsCategory");
 const slugify = require("slugify");
 const path = require("path");
 const fs = require("fs");
-// let sortBy = require("lodash.sortby");
 
 exports.addBlogs = (req, res) => {
   try {
@@ -19,7 +18,17 @@ exports.addBlogs = (req, res) => {
     };
 
     if (req.file) {
-      blogsObj.image = process.env.API + "/public/" + req.file.filename;
+      const destinationPath = path.join(
+        path.dirname(__dirname),
+        "uploads",
+        req.file.filename
+      );
+
+      // Move the file to the uploads folder
+      fs.renameSync(req.file.path, destinationPath);
+
+      // Set the image URL in the blogsObj
+      blogsObj.image = process.env.API + "/uploads/" + req.file.filename;
     }
 
     const blogs = new Blogs(blogsObj);
@@ -56,33 +65,33 @@ exports.getBlogsDetailsById = async (req, res) => {
 exports.deleteBlogsById = async (req, res) => {
   try {
     const { id } = req.body;
-    if (id) {
-      const response = await Blogs.findOne({ _id: id });
-
-      if (response) {
-        let newBannerImage = response?.image.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
-
-        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
-
-        fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
-
-        await Blogs.deleteOne({ _id: id }).exec((error, result) => {
-          if (error) return res.status(400).json({ error });
-          if (result) {
-            res.status(202).json({ message: "Data has been deleted", result });
-          }
-        });
-      }
-    } else {
-      res.status(400).json({ error: `Params required ${error.message}` });
+    if (!id) {
+      return res.status(400).json({ error: "Params id required" });
     }
+
+    const blog = await Blogs.findById(id);
+    if (!blog) {
+      return res.status(404).json({ error: "Blog not found" });
+    }
+
+    if (blog.image) {
+      const imagePath = blog.image.replace(process.env.API + "/uploads/", "");
+      const fullImagePath = path.join(__dirname, "../uploads", imagePath);
+
+      fs.unlink(fullImagePath, (error) => {
+        if (error) {
+          console.error(error);
+          // Even if there is an error deleting the file, continue with the deletion of the blog
+        }
+      });
+    }
+
+    await Blogs.findByIdAndDelete(id).exec((error, result) => {
+      if (error) return res.status(400).json({ error });
+      if (result) {
+        res.status(202).json({ message: "Data has been deleted" });
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
