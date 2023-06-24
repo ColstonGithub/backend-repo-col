@@ -166,6 +166,7 @@ exports.updateBlogs = async (req, res) => {
         Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
         Key: filename,
         Body: fileContent,
+        ACL: "public-read",
       };
 
       // Upload the file to DigitalOcean Spaces

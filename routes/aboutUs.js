@@ -19,10 +19,7 @@ router.post(
   "/aboutus/create",
   requireSignin,
   adminMiddleware,
-  upload.fields([
-    { name: "bannerImage", maxCount: 1 },
-    { name: "bannerImageText", maxCount: 10 },
-  ]),
+  upload.single("bannerImage"),
   createAboutUs
 );
 
