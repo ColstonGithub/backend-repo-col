@@ -11,10 +11,6 @@ exports.createCorporatePageBanner = (req, res) => {
       ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
       : undefined;
 
-    const bannerImageText = req.files["bannerImageText"]
-      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
-      : undefined;
-
     const PageBanner = new CorporatePageBanner({
       title,
       slug: slugify(title),
