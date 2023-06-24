@@ -3,25 +3,42 @@ const shortid = require("shortid");
 const slugify = require("slugify");
 const path = require("path");
 const fs = require("fs");
-exports.createExhibition = (req, res) => {
+
+const AWS = require("aws-sdk");
+
+const s3 = new AWS.S3({
+  endpoint: new AWS.Endpoint("https://sgp1.digitaloceanspaces.com"), // Replace with your DigitalOcean Spaces endpoint
+  accessKeyId: "DO00DRWTB9KLHRDV4HCB", // Replace with your DigitalOcean Spaces access key ID
+  secretAccessKey: "W2Ar0764cy4Y7rsWCecsoZxOZ3mJTJoqxWBo+uppV/c", // Replace with your DigitalOcean Spaces secret access key
+});
+
+exports.createExhibition = async (req, res) => {
   try {
-    const { title, bannerImageAltText, bannerImageTextAltText } = req.body;
+    const { title, bannerImageAltText } = req.body;
 
-    const bannerImage = req.files["bannerImage"]
-      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
-      : undefined;
+    let bannerImage = "";
+    if (req.file) {
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
 
-    const bannerImageText = req.files["bannerImageText"]
-      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
-      : undefined;
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      bannerImage = uploadedFile.Location;
+    }
 
     const PageBanner = new Exhibition({
       title,
       slug: slugify(title),
       bannerImage,
-      bannerImageText,
       bannerImageAltText,
-      bannerImageTextAltText,
       createdBy: req.user._id,
     });
 
