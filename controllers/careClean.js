@@ -2,8 +2,17 @@ const CareClean = require("../models/careClean");
 const shortid = require("shortid");
 const slugify = require("slugify");
 const path = require("path");
-const fs = require("fs")
-exports.createCareClean = (req, res) => {
+const fs = require("fs");
+
+const AWS = require("aws-sdk");
+
+const s3 = new AWS.S3({
+  endpoint: new AWS.Endpoint("https://sgp1.digitaloceanspaces.com"), // Replace with your DigitalOcean Spaces endpoint
+  accessKeyId: "DO00DRWTB9KLHRDV4HCB", // Replace with your DigitalOcean Spaces access key ID
+  secretAccessKey: "W2Ar0764cy4Y7rsWCecsoZxOZ3mJTJoqxWBo+uppV/c", // Replace with your DigitalOcean Spaces secret access key
+});
+
+exports.createCareClean = async (req, res) => {
   try {
     const { text, heading, bannerImageAltText, title } = req.body;
 
@@ -17,8 +26,20 @@ exports.createCareClean = (req, res) => {
     });
 
     if (req.file) {
-      careCleanData.bannerImage =
-        process.env.API + "/public/" + req.file.filename;
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      careCleanData.bannerImage = uploadedFile.Location;
     }
 
     careCleanData.save((error, careClean) => {
