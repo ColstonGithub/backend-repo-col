@@ -44,7 +44,7 @@ exports.createCorporatePageBanner = async (req, res) => {
     if (bannerImageAltText != undefined) {
       PageBanner.bannerImageAltText = bannerImageAltText;
     }
-
+    console.log(bannerImage);
     if (bannerImage != undefined) {
       PageBanner.bannerImage = bannerImage;
     }
