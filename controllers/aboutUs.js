@@ -18,7 +18,6 @@ exports.createAboutUs = async (req, res) => {
 
     let bannerImage = "";
     if (req.file) {
-      console.log("ss 1", req.file.buffer);
       const fileContent = req.file.buffer;
       const filename = shortid.generate() + "-" + req.file.originalname;
       const uploadParams = {
@@ -33,9 +32,7 @@ exports.createAboutUs = async (req, res) => {
 
       // Set the image URL in the bannerImage variable
       bannerImage = uploadedFile.Location;
-      console.log("ss 2", bannerImage);
     }
-    console.log("ss 3", bannerImage);
     const aboutUsData = new AboutUs({
       title,
       slug: slugify(title),
