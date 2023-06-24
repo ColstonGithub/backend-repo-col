@@ -3,7 +3,17 @@ const slugify = require("slugify");
 // let sortBy = require("lodash.sortby");
 const path = require("path");
 const fs = require("fs");
-exports.addNewsPress = (req, res) => {
+const shortid = require("shortid");
+
+const AWS = require("aws-sdk");
+
+const s3 = new AWS.S3({
+  endpoint: new AWS.Endpoint("https://sgp1.digitaloceanspaces.com"), // Replace with your DigitalOcean Spaces endpoint
+  accessKeyId: "DO00DRWTB9KLHRDV4HCB", // Replace with your DigitalOcean Spaces access key ID
+  secretAccessKey: "W2Ar0764cy4Y7rsWCecsoZxOZ3mJTJoqxWBo+uppV/c", // Replace with your DigitalOcean Spaces secret access key
+});
+
+exports.addNewsPress = async (req, res) => {
   try {
     const newsPressObj = {
       title: req.body.title,
@@ -14,7 +24,20 @@ exports.addNewsPress = (req, res) => {
     };
 
     if (req.file) {
-      newsPressObj.image = process.env.API + "/public/" + req.file.filename;
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      newsPressObj.image = uploadedFile.Location;
     }
 
     const newspress = new NewsPress(newsPressObj);
