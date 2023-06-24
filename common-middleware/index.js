@@ -2,17 +2,18 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const shortid = require("shortid");
 const path = require("path");
+const AWS = require("aws-sdk");
+
+const s3 = new AWS.S3({
+  endpoint: new AWS.Endpoint("https://sgp1.digitaloceanspaces.com"),
+  // Replace with your DigitalOcean Spaces endpoint
+  accessKeyId: "DO00DRWTB9KLHRDV4HCB", // Replace with your DigitalOcean Spaces access key ID
+  secretAccessKey: "W2Ar0764cy4Y7rsWCecsoZxOZ3mJTJoqxWBo+uppV/c", // Replace with your DigitalOcean Spaces secret access key
+});
 
 // Set storage engine
-const storage = multer.diskStorage({
-  destination: function (req, file, callback) {
-    callback(null, path.join(path.dirname(__dirname), "uploads"));
-  },
-  filename: function (req, file, callback) {
-    callback(null, shortid.generate() + "-" + file.originalname);
-  },
-});
-// Init multer
+const storage = multer.memoryStorage(); // Store files in memory for uploading to Spaces
+
 const upload = multer({ storage: storage });
 
 // Set JWT Secret

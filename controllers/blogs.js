@@ -1,10 +1,16 @@
 const Blogs = require("../models/blogs");
 const BlogCategory = require("../models/blogsCategory");
 const slugify = require("slugify");
-const path = require("path");
-const fs = require("fs");
+const shortid = require("shortid");
+const AWS = require("aws-sdk");
 
-exports.addBlogs = (req, res) => {
+const s3 = new AWS.S3({
+  endpoint: new AWS.Endpoint("https://sgp1.digitaloceanspaces.com"), // Replace with your DigitalOcean Spaces endpoint
+  accessKeyId: "DO00DRWTB9KLHRDV4HCB", // Replace with your DigitalOcean Spaces access key ID
+  secretAccessKey: "W2Ar0764cy4Y7rsWCecsoZxOZ3mJTJoqxWBo+uppV/c", // Replace with your DigitalOcean Spaces secret access key
+});
+
+exports.addBlogs = async (req, res) => {
   try {
     const blogsObj = {
       title: req.body.title,
@@ -18,17 +24,20 @@ exports.addBlogs = (req, res) => {
     };
 
     if (req.file) {
-      const destinationPath = path.join(
-        path.dirname(__dirname),
-        "uploads",
-        req.file.filename
-      );
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
 
-      // Move the file to the uploads folder
-      fs.renameSync(req.file.path, destinationPath);
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
 
       // Set the image URL in the blogsObj
-      blogsObj.image = process.env.API + "/uploads/" + req.file.filename;
+      blogsObj.image = uploadedFile.Location;
     }
 
     const blogs = new Blogs(blogsObj);
@@ -64,34 +73,26 @@ exports.getBlogsDetailsById = async (req, res) => {
 
 exports.deleteBlogsById = async (req, res) => {
   try {
-    const { id } = req.body;
-    if (!id) {
-      return res.status(400).json({ error: "Params id required" });
-    }
+    const blogId = req.body.id;
+    const blog = await Blogs.findById(blogId);
 
-    const blog = await Blogs.findById(id);
     if (!blog) {
       return res.status(404).json({ error: "Blog not found" });
     }
 
+    // Delete the associated image data from DigitalOcean Spaces
     if (blog.image) {
-      const imagePath = blog.image.replace(process.env.API + "/uploads/", "");
-      const fullImagePath = path.join(__dirname, "../uploads", imagePath);
+      const key = blog.image.split("/").pop();
+      const deleteParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: key,
+      };
 
-      fs.unlink(fullImagePath, (error) => {
-        if (error) {
-          console.error(error);
-          // Even if there is an error deleting the file, continue with the deletion of the blog
-        }
-      });
+      await s3.deleteObject(deleteParams).promise();
     }
 
-    await Blogs.findByIdAndDelete(id).exec((error, result) => {
-      if (error) return res.status(400).json({ error });
-      if (result) {
-        res.status(202).json({ message: "Data has been deleted" });
-      }
-    });
+    await Blogs.findByIdAndDelete(blogId);
+    res.status(200).json({ message: "Blog deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -157,9 +158,23 @@ exports.updateBlogs = async (req, res) => {
     } = req.body;
 
     const blogs = {};
+
     if (req.file) {
-      blogs.image = process.env.API + "/public/" + req.file.filename;
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the blogsObj
+      blogs.image = uploadedFile.Location;
     }
+
     if (title != undefined) {
       blogs.title = title;
       blogs.slug = slugify(req.body.title);
