@@ -14,6 +14,11 @@ const s3 = new AWS.S3({
 // Set storage engine
 const storage = multer.memoryStorage(); // Store files in memory for uploading to Spaces
 
+const uploadField = multer({ storage: storage }).fields([
+  { name: "pdf", maxCount: 1 },
+  { name: "image", maxCount: 10 },
+]);
+
 const upload = multer({ storage: storage });
 
 // Set JWT Secret
@@ -50,4 +55,5 @@ module.exports = {
   requireSignin,
   adminMiddleware,
   upload,
+  uploadField,
 };

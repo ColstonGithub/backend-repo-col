@@ -1,9 +1,15 @@
 const Catalogue = require("../models/catalogue");
 const slugify = require("slugify");
-// let sortBy = require("lodash.sortby");
-const path = require("path");
-const fs = require("fs");
-exports.addCatalogue = (req, res) => {
+const shortid = require("shortid");
+const AWS = require("aws-sdk");
+
+const s3 = new AWS.S3({
+  endpoint: new AWS.Endpoint("https://sgp1.digitaloceanspaces.com"), // Replace with your DigitalOcean Spaces endpoint
+  accessKeyId: "DO00DRWTB9KLHRDV4HCB", // Replace with your DigitalOcean Spaces access key ID
+  secretAccessKey: "W2Ar0764cy4Y7rsWCecsoZxOZ3mJTJoqxWBo+uppV/c", // Replace with your DigitalOcean Spaces secret access key
+});
+
+exports.addCatalogue = async (req, res) => {
   try {
     const catalogueObj = {
       title: req.body.title,
@@ -12,21 +18,52 @@ exports.addCatalogue = (req, res) => {
       createdBy: req.user._id,
     };
 
-    const pdf = req.files["pdf"]
-      ? process.env.API + "/public/" + req.files["pdf"][0].filename
-      : undefined;
+    // Upload PDF file
+    if (req.files && req.files["pdf"]) {
+      const pdfFile = req.files["pdf"][0];
+      const pdfContent = pdfFile.buffer;
+      const pdfFilename = shortid.generate() + "-" + pdfFile.originalname;
+      const pdfUploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: pdfFilename,
+        Body: pdfContent,
+        ACL: "public-read",
+      };
 
-    const image = req.files["image"]
-      ? process.env.API + "/public/" + req.files["image"][0].filename
-      : undefined;
+      // Upload the PDF file to DigitalOcean Spaces
+      const uploadedPDF = await s3.upload(pdfUploadParams).promise();
 
-    if (pdf && pdf != undefined) {
-      catalogueObj.pdf = pdf;
+      // Set the PDF URL in the catalogueObj
+      catalogueObj.pdf = uploadedPDF.Location;
     }
 
-    if (image && image != undefined) {
-      catalogueObj.image = image;
+    // Upload image files
+    if (req.files && req.files["image"]) {
+      const imageFiles = req.files["image"];
+      const imageUrls = [];
+
+      for (let i = 0; i < imageFiles.length; i++) {
+        const imageFile = imageFiles[i];
+        const imageContent = imageFile.buffer;
+        const imageFilename = shortid.generate() + "-" + imageFile.originalname;
+        const imageUploadParams = {
+          Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+          Key: imageFilename,
+          Body: imageContent,
+          ACL: "public-read",
+        };
+
+        // Upload each image file to DigitalOcean Spaces
+        const uploadedImage = await s3.upload(imageUploadParams).promise();
+
+        // Add the image URL to the imageUrls array
+        imageUrls.push(uploadedImage.Location);
+      }
+
+      // Set the image URLs in the catalogueObj
+      catalogueObj.image = imageUrls;
     }
+
     const catalogue = new Catalogue(catalogueObj);
 
     catalogue.save((error, catalog) => {
@@ -69,10 +106,7 @@ exports.deleteCatalogueById = async (req, res) => {
           "http://localhost:5000/public/",
           ""
         );
-        let pdf = response?.pdf.replace(
-          "http://localhost:5000/public/",
-          ""
-        );
+        let pdf = response?.pdf.replace("http://localhost:5000/public/", "");
         const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
         const imagepath2 = path.join(__dirname, "../uploads", pdf);
         fs.unlink(imagepath1, (error) => {

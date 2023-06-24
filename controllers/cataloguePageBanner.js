@@ -3,6 +3,15 @@ const shortid = require("shortid");
 const slugify = require("slugify");
 const path = require("path");
 const fs = require("fs");
+
+const AWS = require("aws-sdk");
+
+const s3 = new AWS.S3({
+  endpoint: new AWS.Endpoint("https://sgp1.digitaloceanspaces.com"), // Replace with your DigitalOcean Spaces endpoint
+  accessKeyId: "DO00DRWTB9KLHRDV4HCB", // Replace with your DigitalOcean Spaces access key ID
+  secretAccessKey: "W2Ar0764cy4Y7rsWCecsoZxOZ3mJTJoqxWBo+uppV/c", // Replace with your DigitalOcean Spaces secret access key
+});
+
 exports.createCataloguePageBanner = (req, res) => {
   try {
     const { title, bannerImageAltText, bannerImageTextAltText } = req.body;

@@ -14,7 +14,7 @@ const {
   adminMiddleware,
   // superAdminMiddleware,
   upload,
-  //upload
+  uploadField,
 } = require("../common-middleware");
 
 router.post(
