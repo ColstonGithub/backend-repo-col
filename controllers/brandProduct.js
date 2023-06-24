@@ -4,7 +4,16 @@ const slugify = require("slugify");
 // let sortBy = require("lodash.sortby");
 const path = require("path");
 const fs = require("fs");
-exports.addbrandProduct = (req, res) => {
+
+const AWS = require("aws-sdk");
+
+const s3 = new AWS.S3({
+  endpoint: new AWS.Endpoint("https://sgp1.digitaloceanspaces.com"), // Replace with your DigitalOcean Spaces endpoint
+  accessKeyId: "DO00DRWTB9KLHRDV4HCB", // Replace with your DigitalOcean Spaces access key ID
+  secretAccessKey: "W2Ar0764cy4Y7rsWCecsoZxOZ3mJTJoqxWBo+uppV/c", // Replace with your DigitalOcean Spaces secret access key
+});
+
+exports.addbrandProduct = async (req, res) => {
   try {
     const brandObj = {
       title: req.body.title,
@@ -15,7 +24,20 @@ exports.addbrandProduct = (req, res) => {
     };
 
     if (req.file) {
-      brandObj.image = process.env.API + "/public/" + req.file.filename;
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      brandObj.image = uploadedFile.Location;
     }
 
     const brand = new BrandProduct(brandObj);
@@ -54,11 +76,9 @@ exports.deletebrandProducttById = async (req, res) => {
   try {
     const { brandProductId } = req.body;
     if (brandProductId) {
-
       const response = await BrandProduct.findOne({ _id: brandProductId });
 
       if (response) {
-
         let newBannerImage = response?.image.replace(
           "http://64.227.150.49:5000/public/",
           ""
@@ -72,15 +92,17 @@ exports.deletebrandProducttById = async (req, res) => {
           }
         });
 
-      await BrandProduct.deleteOne({ _id: brandProductId }).exec(
-        (error, result) => {
-          if (error) return res.status(400).json({ error });
-          if (result) {
-            res.status(202).json({ result, message: "Data has been deleted" });
+        await BrandProduct.deleteOne({ _id: brandProductId }).exec(
+          (error, result) => {
+            if (error) return res.status(400).json({ error });
+            if (result) {
+              res
+                .status(202)
+                .json({ result, message: "Data has been deleted" });
+            }
           }
-        }
-      );
-    }
+        );
+      }
     } else {
       res.status(400).json({ error: "Params required" });
     }
@@ -109,7 +131,8 @@ exports.getBrandProducts = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
   const page = parseInt(req.query.page) || 1; // Set a default page number of 1
   try {
-    const brandProduct = await BrandProduct.find({}).sort({ _id: -1 })
+    const brandProduct = await BrandProduct.find({})
+      .sort({ _id: -1 })
       .limit(limit)
       .skip(limit * page - limit);
 
