@@ -69,6 +69,7 @@ exports.updateBlogCategory = async (req, res) => {
       name,
       slug: slugify(name),
     };
+
     const updatedBlogCategory = await BlogCategory.findOneAndUpdate(
       { _id },
       category,

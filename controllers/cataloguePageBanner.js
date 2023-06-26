@@ -84,31 +84,16 @@ exports.deleteCataloguePageBannerById = async (req, res) => {
       const response = await CataloguePageBanner.findOne({ _id: id });
 
       if (response) {
-        let newBannerImage = response?.bannerImage.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
-        let newBannerImageText = response?.bannerImageText.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
+        // Delete the associated image data from DigitalOcean Spaces
+        if (response.image) {
+          const key = response.image.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
 
-        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
-        const imagepath2 = path.join(
-          __dirname,
-          "../uploads",
-          newBannerImageText
-        );
-        fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
-        fs.unlink(imagepath2, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
+          await s3.deleteObject(deleteParams).promise();
+        }
 
         await CataloguePageBanner.deleteOne({ _id: id }).exec(
           (error, result) => {

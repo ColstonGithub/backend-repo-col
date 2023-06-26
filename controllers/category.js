@@ -200,17 +200,16 @@ exports.deleteCategories = async (req, res) => {
     const response = await Category.findOne({ _id: ids[0]._id });
 
     if (response) {
-      let newBannerImage = response?.categoryImage.replace(
-        "http://64.227.150.49:5000/public/",
-        ""
-      );
-      const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
+      // Delete the associated image data from DigitalOcean Spaces
+      if (response.categoryImage) {
+        const key = response.categoryImage.split("/").pop();
+        const deleteParams = {
+          Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+          Key: key,
+        };
 
-      fs.unlink(imagepath1, (error) => {
-        if (error) {
-          console.error(error);
-        }
-      });
+        await s3.deleteObject(deleteParams).promise();
+      }
 
       for (let i = 0; i < ids.length; i++) {
         const deleteCategory = await Category.findOneAndDelete({

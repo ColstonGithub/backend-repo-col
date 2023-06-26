@@ -82,18 +82,16 @@ exports.deleteCareerById = async (req, res) => {
       const response = await Career.findOne({ _id: id });
 
       if (response) {
-        let newBannerImage = response?.pdf.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
-
-        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
-
-        fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
+        // Delete the associated image data from DigitalOcean Spaces
+        if (response.pdf) {
+          const key = response.pdf.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
+    
+          await s3.deleteObject(deleteParams).promise();
+        }
 
         await Career.deleteOne({ _id: id }).exec((error, result) => {
           if (error) return res.status(400).json({ error });

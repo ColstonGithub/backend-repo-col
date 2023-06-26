@@ -1,8 +1,6 @@
 const CategoryBanner = require("../models/categoryBanner");
 const shortid = require("shortid");
 const slugify = require("slugify");
-const path = require("path");
-const fs = require("fs");
 
 const AWS = require("aws-sdk");
 
@@ -97,17 +95,16 @@ exports.deleteCategoryBannerById = async (req, res) => {
       const response = await CategoryBanner.findOne({ _id: id });
 
       if (response) {
-        let newBannerImage = response?.bannerImage.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
-        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
+        // Delete the associated image data from DigitalOcean Spaces
+        if (response.bannerImage) {
+          const key = response.bannerImage.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
 
-        fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
+          await s3.deleteObject(deleteParams).promise();
+        }
 
         await CategoryBanner.deleteOne({ _id: id }).exec((error, result) => {
           if (error) return res.status(400).json({ error });

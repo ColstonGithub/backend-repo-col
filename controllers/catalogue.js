@@ -94,23 +94,28 @@ exports.deleteCatalogueById = async (req, res) => {
       const response = await Catalogue.findOne({ _id: id });
 
       if (response) {
-        let newBannerImage = response?.image.replace(
-          "http://localhost:5000/public/",
-          ""
-        );
-        let pdf = response?.pdf.replace("http://localhost:5000/public/", "");
-        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
-        const imagepath2 = path.join(__dirname, "../uploads", pdf);
-        fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
-        fs.unlink(imagepath2, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
+
+        // Delete the associated image data from DigitalOcean Spaces
+        if (response.image) {
+          const key = response.image.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
+
+          await s3.deleteObject(deleteParams).promise();
+        }
+
+        // Delete the associated image data from DigitalOcean Spaces
+        if (response.pdf) {
+          const key = response.pdf.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
+
+          await s3.deleteObject(deleteParams).promise();
+        }
 
         await Catalogue.deleteOne({ _id: id }).exec((error, result) => {
           if (error) return res.status(400).json({ error });
