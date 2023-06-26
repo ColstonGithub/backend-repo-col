@@ -2,17 +2,45 @@ const Video = require("../models/video");
 const shortid = require("shortid");
 const slugify = require("slugify");
 
-exports.createVideo = (req, res) => {
+exports.createVideo = async (req, res) => {
   try {
     const { title, metaData } = req.body;
+    let video = "";
+    let poster = "";
+    if (req.files["video"]) {
+      const fileContent = req.files["video"][0].buffer;
+      const filename =
+        shortid.generate() + "-" + req.files["video"][0].originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
 
-    const video = req.files["video"]
-      ? process.env.API + "/public/" + req.files["video"][0].filename
-      : undefined;
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
 
-    const poster = req.files["poster"]
-      ? process.env.API + "/public/" + req.files["poster"][0].filename
-      : undefined;
+      // Set the image URL in the bannerImage variable
+      video = uploadedFile.Location;
+    }
+    if (req.files["poster"]) {
+      const fileContent = req.files["poster"][0].buffer;
+      const filename =
+        shortid.generate() + "-" + req.files["poster"][0].originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      poster = uploadedFile.Location;
+    }
 
     const videoData = new Video({
       title,
