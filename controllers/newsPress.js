@@ -153,8 +153,22 @@ exports.updateNewsPress = async (req, res) => {
 
     const newsPress = {};
     if (req.file) {
-      newsPress.image = process.env.API + "/public/" + req.file.filename;
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      newsPress.image = uploadedFile.Location;
     }
+
     if (title) {
       newsPress.title = title;
       newsPress.slug = slugify(req.body.title);
