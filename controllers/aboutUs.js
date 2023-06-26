@@ -139,17 +139,27 @@ exports.updateAboutUs = async (req, res) => {
   try {
     const { _id, text, heading, bannerImageAltText, title } = req.body;
 
-    const bannerImage = req.files["bannerImage"]
-      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
-      : undefined;
-
     const aboutUsData = {
       createdBy: req.user._id,
     };
+    if (req.files["bannerImage"]) {
+      const fileContent = req.files["bannerImage"][0].buffer;
+      const filename =
+        shortid.generate() + "-" + req.files["bannerImage"][0].originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
 
-    if (bannerImage != undefined && bannerImage != "") {
-      aboutUsData.bannerImage = bannerImage;
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      aboutUsData.bannerImage = uploadedFile.Location;
     }
+
     if (text != undefined && text != "") {
       aboutUsData.text = text;
     }
