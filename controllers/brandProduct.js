@@ -79,19 +79,16 @@ exports.deletebrandProducttById = async (req, res) => {
       const response = await BrandProduct.findOne({ _id: brandProductId });
 
       if (response) {
-        let newBannerImage = response?.image.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
+        // Delete the associated image data from DigitalOcean Spaces
+        if (response.image) {
+          const key = response.image.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
 
-        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
-
-        fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
-
+          await s3.deleteObject(deleteParams).promise();
+        }
         await BrandProduct.deleteOne({ _id: brandProductId }).exec(
           (error, result) => {
             if (error) return res.status(400).json({ error });
