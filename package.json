@@ -19,6 +19,7 @@
   "author": "Preetam",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.1404.0",
     "bcrypt": "^5.0.0",
     "body-parser": "^1.20.1",
     "concurrently": "^5.3.0",
