@@ -1,8 +1,7 @@
 const Video = require("../models/video");
 const shortid = require("shortid");
 const slugify = require("slugify");
-const path = require("path");
-const fs = require("fs");
+
 exports.createVideo = (req, res) => {
   try {
     const { title, metaData } = req.body;
@@ -63,31 +62,24 @@ exports.deleteVideoById = async (req, res) => {
       const response = await Video.findOne({ _id: id });
 
       if (response) {
-        let newBannerImage = response?.video.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
-        let newBannerImageText = response?.poster.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
+        if (response.video) {
+          const key = response.video.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
 
-        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
-        const imagepath2 = path.join(
-          __dirname,
-          "../uploads",
-          newBannerImageText
-        );
-        fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
-        fs.unlink(imagepath2, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
+          await s3.deleteObject(deleteParams).promise();
+        }
+        if (response.poster) {
+          const key = response.poster.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
+
+          await s3.deleteObject(deleteParams).promise();
+        }
 
         await Video.deleteOne({ _id: id }).exec((error, result) => {
           if (error) return res.status(400).json({ error });

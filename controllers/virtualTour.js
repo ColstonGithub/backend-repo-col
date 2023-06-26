@@ -1,8 +1,6 @@
 const VirtualTour = require("../models/virtualTour");
 const shortid = require("shortid");
 const slugify = require("slugify");
-const path = require("path");
-const fs = require("fs");
 
 const AWS = require("aws-sdk");
 
@@ -82,31 +80,15 @@ exports.deleteVirtualTourById = async (req, res) => {
       const response = await VirtualTour.findOne({ _id: id });
 
       if (response) {
-        let newBannerImage = response?.bannerImage.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
-        let newBannerImageText = response?.bannerImageText.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
+        if (response.bannerImage) {
+          const key = response.bannerImage.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
 
-        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
-        const imagepath2 = path.join(
-          __dirname,
-          "../uploads",
-          newBannerImageText
-        );
-        fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
-        fs.unlink(imagepath2, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
+          await s3.deleteObject(deleteParams).promise();
+        }
 
         await VirtualTour.deleteOne({ _id: id }).exec((error, result) => {
           if (error) return res.status(400).json({ error });
@@ -153,13 +135,7 @@ exports.getVirtualTours = async (req, res) => {
 
 exports.updateVirtualTour = async (req, res) => {
   try {
-    const {
-      _id,
-      title,
-      buttonText,
-      bannerImageAltText,
-    } = req.body;
-
+    const { _id, title, buttonText, bannerImageAltText } = req.body;
 
     const pageBanner = {
       createdBy: req.user._id,

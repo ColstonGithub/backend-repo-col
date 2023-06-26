@@ -1,8 +1,6 @@
 const AboutUs = require("../models/aboutUs");
 const shortid = require("shortid");
 const slugify = require("slugify");
-const fs = require("fs");
-const path = require("path");
 
 const AWS = require("aws-sdk");
 

@@ -95,19 +95,16 @@ exports.deleteBannerById = async (req, res) => {
       const response = await Banner.findOne({ _id: bannerId });
 
       if (response) {
-        let newBannerImage = response?.banner.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
-        const imagePath1 = path.join(__dirname, "../uploads", newBannerImage);
+        if (response.banner) {
+          const key = response.banner.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
 
-        fs.unlink(imagePath1, (error) => {
-          if (error) {
-            console.error(`Error deleting image file: ${error}`);
-          } else {
-            console.log(`Image file ${imagePath1} deleted successfully.`);
-          }
-        });
+          await s3.deleteObject(deleteParams).promise();
+        }
+
 
         Banner.deleteOne({ _id: bannerId }).exec((error, result) => {
           if (error) return res.status(400).json({ error });
