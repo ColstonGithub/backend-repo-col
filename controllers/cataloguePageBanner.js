@@ -12,17 +12,9 @@ const s3 = new AWS.S3({
   secretAccessKey: "W2Ar0764cy4Y7rsWCecsoZxOZ3mJTJoqxWBo+uppV/c", // Replace with your DigitalOcean Spaces secret access key
 });
 
-exports.createCataloguePageBanner = (req, res) => {
+exports.createCataloguePageBanner = async (req, res) => {
   try {
-    const { title, bannerImageAltText, bannerImageTextAltText } = req.body;
-
-    const bannerImage = req.files["bannerImage"]
-      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
-      : undefined;
-
-    const bannerImageText = req.files["bannerImageText"]
-      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
-      : undefined;
+    const { title, bannerImageAltText } = req.body;
 
     const cataloguePageBanner = new CataloguePageBanner({
       title,
@@ -31,14 +23,24 @@ exports.createCataloguePageBanner = (req, res) => {
       bannerImageAltText,
       createdBy: req.user._id,
     });
-    if (bannerImageTextAltText != undefined) {
-      cataloguePageBanner.bannerImageTextAltText = bannerImageTextAltText;
-    }
-    if (bannerImageText != undefined) {
-      cataloguePageBanner.bannerImageText = bannerImageText;
-    }
-    if (bannerImage != undefined) {
-      cataloguePageBanner.bannerImage = bannerImage;
+
+    // Upload image files
+    if (req.files && req.files["bannerImage"]) {
+      const imageFile = req.files["bannerImage"][0];
+      const imageContent = imageFile.buffer;
+      const imageFilename = shortid.generate() + "-" + imageFile.originalname;
+      const imageUploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: imageFilename,
+        Body: imageContent,
+        ACL: "public-read",
+      };
+
+      // Upload the PDF file to DigitalOcean Spaces
+      const uploadedImage = await s3.upload(imageUploadParams).promise();
+
+      // Set the PDF URL in the catalogueObj
+      cataloguePageBanner.bannerImage = uploadedImage.Location;
     }
     if (bannerImageAltText != undefined) {
       cataloguePageBanner.bannerImageAltText = bannerImageAltText;
