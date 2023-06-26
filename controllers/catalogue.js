@@ -39,29 +39,22 @@ exports.addCatalogue = async (req, res) => {
 
     // Upload image files
     if (req.files && req.files["image"]) {
-      const imageFiles = req.files["image"];
-      const imageUrls = [];
+      const imageFile = req.files["image"][0];
+      const imageContent = imageFile.buffer;
+      const imageFilename = shortid.generate() + "-" + imageFile.originalname;
+      const imageUploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: imageFilename,
+        Body: imageContent,
+        ACL: "public-read",
+      };
 
-      for (let i = 0; i < imageFiles.length; i++) {
-        const imageFile = imageFiles[i];
-        const imageContent = imageFile.buffer;
-        const imageFilename = shortid.generate() + "-" + imageFile.originalname;
-        const imageUploadParams = {
-          Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
-          Key: imageFilename,
-          Body: imageContent,
-          ACL: "public-read",
-        };
+      // Upload the PDF file to DigitalOcean Spaces
+      const uploadedImage = await s3.upload(imageUploadParams).promise();
 
-        // Upload each image file to DigitalOcean Spaces
-        const uploadedImage = await s3.upload(imageUploadParams).promise();
-
-        // Add the image URL to the imageUrls array
-        imageUrls.push(uploadedImage.Location);
-      }
-
-      // Set the image URLs in the catalogueObj
-      catalogueObj.image = imageUrls;
+      // Set the PDF URL in the catalogueObj
+      catalogueObj.image = uploadedImage.Location;
+      
     }
 
     const catalogue = new Catalogue(catalogueObj);
