@@ -140,16 +140,25 @@ exports.updateBrandPageBanner = async (req, res) => {
   try {
     const { _id, title, bannerImageAltText } = req.body;
 
-    const bannerImage = req.file
-      ? process.env.API + "/public/" + req.file.filename
-      : undefined;
-
     const pageBanner = {
       createdBy: req.user._id,
     };
 
-    if (bannerImage != undefined) {
-      pageBanner.bannerImage = bannerImage;
+    if (req.file) {
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      pageBanner.bannerImage = uploadedFile.Location;
     }
     if (bannerImageAltText != undefined) {
       pageBanner.bannerImageAltText = bannerImageAltText;

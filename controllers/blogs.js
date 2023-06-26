@@ -183,7 +183,7 @@ exports.updateBlogs = async (req, res) => {
     if (blogCategory != undefined) {
       blogs.blogCategory = blogCategory;
     }
-    if (text != undefined) {
+    if (text != undefined && text != null && text != "null") {
       blogs.text = text;
     }
     if (imageAltText != undefined) {
