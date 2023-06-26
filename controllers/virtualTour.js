@@ -158,31 +158,32 @@ exports.updateVirtualTour = async (req, res) => {
       title,
       buttonText,
       bannerImageAltText,
-      bannerImageTextAltText,
     } = req.body;
 
-    const bannerImage = req.files["bannerImage"]
-      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
-      : undefined;
-
-    const bannerImageText = req.files["bannerImageText"]
-      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
-      : undefined;
 
     const pageBanner = {
       createdBy: req.user._id,
     };
-    if (bannerImageText != undefined) {
-      pageBanner.bannerImageText = bannerImageText;
+
+    if (req.file) {
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      pageBanner.bannerImage = uploadedFile.Location;
     }
-    if (bannerImage != undefined) {
-      pageBanner.bannerImage = bannerImage;
-    }
+
     if (bannerImageAltText != undefined) {
       pageBanner.bannerImageAltText = bannerImageAltText;
-    }
-    if (bannerImageTextAltText != undefined) {
-      pageBanner.bannerImageTextAltText = bannerImageTextAltText;
     }
 
     if (buttonText != undefined) {
