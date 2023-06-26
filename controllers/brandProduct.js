@@ -156,19 +156,30 @@ exports.updateBrandProduct = async (req, res) => {
   try {
     const { _id, title, text, imageAltText } = req.body;
 
-    let image = "";
-    if (req.file) {
-      image = process.env.API + "/public/" + req.file.filename;
-    }
     const brandProduct = {
       title,
       text,
       imageAltText,
       slug: slugify(req.body.title),
     };
-    if (image != "") {
-      brandProduct.image = image;
+
+    if (req.file) {
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      brandProduct.image = uploadedFile.Location;
     }
+
     const updatedProduct = await BrandProduct.findOneAndUpdate(
       { _id },
       brandProduct,
