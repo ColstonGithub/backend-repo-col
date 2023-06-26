@@ -154,17 +154,27 @@ exports.updateCategoryBanner = async (req, res) => {
   try {
     const { _id, title, bannerImageAltText, categoryId } = req.body;
 
-    const bannerImage = req.file
-      ? process.env.API + "/public/" + req.file.filename
-      : undefined;
-
     const categoryBanner = {
       createdBy: req.user._id,
     };
 
-    if (bannerImage != undefined && bannerImage != "") {
-      categoryBanner.bannerImage = bannerImage;
+    if (req.file) {
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      categoryBanner.bannerImage = uploadedFile.Location;
     }
+
     if (bannerImageAltText != undefined) {
       categoryBanner.bannerImageAltText = bannerImageAltText;
     }
