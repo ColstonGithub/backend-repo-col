@@ -35,7 +35,6 @@ exports.addCatalogue = async (req, res) => {
 
       // Set the PDF URL in the catalogueObj
       catalogueObj.pdf = uploadedPDF.Location;
-      
     }
 
     // Upload image files
@@ -55,7 +54,6 @@ exports.addCatalogue = async (req, res) => {
 
       // Set the PDF URL in the catalogueObj
       catalogueObj.image = uploadedImage.Location;
-
     }
 
     const catalogue = new Catalogue(catalogueObj);
@@ -179,24 +177,47 @@ exports.updateCatalogue = async (req, res) => {
 
     const catalogue = {};
 
-    const pdf = req.files["pdf"]
-      ? process.env.API + "/public/" + req.files["pdf"][0].filename
-      : undefined;
+    // Upload PDF file
+    if (req.files && req.files["pdf"]) {
+      const pdfFile = req.files["pdf"][0];
+      const pdfContent = pdfFile.buffer;
+      const pdfFilename = shortid.generate() + "-" + pdfFile.originalname;
+      const pdfUploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: pdfFilename,
+        Body: pdfContent,
+        ACL: "public-read",
+      };
 
-    const catImage = req.files["image"]
-      ? process.env.API + "/public/" + req.files["image"][0].filename
-      : undefined;
+      // Upload the PDF file to DigitalOcean Spaces
+      const uploadedPDF = await s3.upload(pdfUploadParams).promise();
 
-    if (pdf != undefined && pdf != "") {
-      catalogue.pdf = pdf;
+      // Set the PDF URL in the catalogueObj
+      catalogue.pdf = uploadedPDF.Location;
+    }
+
+    // Upload image files
+    if (req.files && req.files["image"]) {
+      const imageFile = req.files["image"][0];
+      const imageContent = imageFile.buffer;
+      const imageFilename = shortid.generate() + "-" + imageFile.originalname;
+      const imageUploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: imageFilename,
+        Body: imageContent,
+        ACL: "public-read",
+      };
+
+      // Upload the PDF file to DigitalOcean Spaces
+      const uploadedImage = await s3.upload(imageUploadParams).promise();
+
+      // Set the PDF URL in the catalogueObj
+      catalogue.image = uploadedImage.Location;
     }
 
     if (title != undefined && title != "") {
       catalogue.title = title;
       catalogue.slug = slugify(req.body.title);
-    }
-    if (catImage != undefined && catImage != "") {
-      catalogue.image = catImage;
     }
 
     if (imageAltText != undefined && imageAltText != "") {
