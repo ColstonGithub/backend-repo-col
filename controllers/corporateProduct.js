@@ -153,8 +153,22 @@ exports.updateCorporateProduct = async (req, res) => {
     const { _id, title, text, imageAltText } = req.body;
 
     const corporateProduct = {};
+
     if (req.file) {
-      corporateProduct.image = process.env.API + "/public/" + req.file.filename;
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      corporateProduct.image = uploadedFile.Location;
     }
 
     if (title) {

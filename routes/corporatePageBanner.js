@@ -40,11 +40,7 @@ router.patch(
   "/corporatepagebanner/update",
   requireSignin,
   adminMiddleware,
-
-  upload.fields([
-    { name: "bannerImage", maxCount: 1 },
-    { name: "bannerImageText", maxCount: 10 },
-  ]),
+  upload.single("bannerImage"),
   updateCorporatePageBanner
 );
 

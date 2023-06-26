@@ -44,7 +44,6 @@ exports.createCorporatePageBanner = async (req, res) => {
     if (bannerImageAltText != undefined) {
       PageBanner.bannerImageAltText = bannerImageAltText;
     }
-    console.log(bannerImage);
     if (bannerImage != undefined) {
       PageBanner.bannerImage = bannerImage;
     }
@@ -160,36 +159,30 @@ exports.getCorporatePageBanners = async (req, res) => {
 
 exports.updateCorporatePageBanner = async (req, res) => {
   try {
-    const {
-      _id,
-      title,
-      buttonText,
-      bannerImageAltText,
-      bannerImageTextAltText,
-    } = req.body;
-
-    const bannerImage = req.files["bannerImage"]
-      ? process.env.API + "/public/" + req.files["bannerImage"][0].filename
-      : undefined;
-
-    const bannerImageText = req.files["bannerImageText"]
-      ? process.env.API + "/public/" + req.files["bannerImageText"][0].filename
-      : undefined;
-
+    const { _id, title, buttonText, bannerImageAltText } = req.body;
     const pageBanner = {
       createdBy: req.user._id,
     };
-    if (bannerImageText != undefined) {
-      pageBanner.bannerImageText = bannerImageText;
+
+    if (req.file) {
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      pageBanner.bannerImage = uploadedFile.Location;
     }
-    if (bannerImage != undefined) {
-      pageBanner.bannerImage = bannerImage;
-    }
+
     if (bannerImageAltText != undefined) {
       pageBanner.bannerImageAltText = bannerImageAltText;
-    }
-    if (bannerImageTextAltText != undefined) {
-      pageBanner.bannerImageTextAltText = bannerImageTextAltText;
     }
 
     if (buttonText != undefined) {
