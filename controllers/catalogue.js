@@ -35,6 +35,7 @@ exports.addCatalogue = async (req, res) => {
 
       // Set the PDF URL in the catalogueObj
       catalogueObj.pdf = uploadedPDF.Location;
+      
     }
 
     // Upload image files
@@ -54,7 +55,7 @@ exports.addCatalogue = async (req, res) => {
 
       // Set the PDF URL in the catalogueObj
       catalogueObj.image = uploadedImage.Location;
-      
+
     }
 
     const catalogue = new Catalogue(catalogueObj);

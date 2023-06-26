@@ -60,6 +60,7 @@ router.patch(
     { name: "productPicture", maxCount: 10 },
     { name: "colorPicture0", maxCount: 10 },
     { name: "colorPicture1", maxCount: 10 },
+    { name: "colorPicture2", maxCount: 10 },
   ]),
   updateProduct
 );
