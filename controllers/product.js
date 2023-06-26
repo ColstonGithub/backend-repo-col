@@ -3,8 +3,6 @@ const shortid = require("shortid");
 const slugify = require("slugify");
 let sortBy = require("lodash.sortby");
 const Category = require("../models/category");
-const path = require("path");
-const fs = require("fs");
 const AWS = require("aws-sdk");
 
 const s3 = new AWS.S3({
@@ -211,47 +209,40 @@ exports.deleteProductById = async (req, res) => {
       const response = await Product.findOne({ _id: productId });
 
       if (response) {
-        let pdf = response?.pdf.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
+        // Delete the associated image data from DigitalOcean Spaces
+        if (response.pdf) {
+          const key = response.pdf.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
 
-        const imagepath1 = path.join(__dirname, "../uploads", pdf);
+          await s3.deleteObject(deleteParams).promise();
+        }
 
-        fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
+        response.productPictures.map(async (banner) => {
+          if (banner.img) {
+            const key = banner.img.split("/").pop();
+            const deleteParams = {
+              Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+              Key: key,
+            };
+
+            await s3.deleteObject(deleteParams).promise();
           }
         });
 
-        response.productPictures.map((banner) => {
-          let newValue = banner.img.replace(
-            "http://64.227.150.49:5000/public/",
-            ""
-          );
-          const imagePath2 = path.join(__dirname, "../uploads", newValue);
-          fs.unlink(imagePath2, (error) => {
-            if (error) {
-              console.error(`Error deleting image file: ${error}`);
-            } else {
-              console.log(`Image file ${imagePath2} deleted successfully.`);
-            }
-          });
-        });
         response.colors.forEach((banner) => {
-          banner.productPictures.map((image) => {
-            let newValue = image.img.replace(
-              "http://64.227.150.49:5000/public/",
-              ""
-            );
-            const imagePath3 = path.join(__dirname, "../uploads", newValue);
-            fs.unlink(imagePath3, (error) => {
-              if (error) {
-                console.error(`Error deleting image file: ${error}`);
-              } else {
-                console.log(`Image file ${imagePath3} deleted successfully.`);
-              }
-            });
+          banner.productPictures.map(async (image) => {
+            if (image.img) {
+              const key = image.img.split("/").pop();
+              const deleteParams = {
+                Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+                Key: key,
+              };
+
+              await s3.deleteObject(deleteParams).promise();
+            }
           });
         });
 
