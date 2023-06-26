@@ -80,18 +80,16 @@ exports.deleteBrandPageBannerById = async (req, res) => {
       const response = await BrandPageBanner.findOne({ _id: id });
 
       if (response) {
-        let newBannerImage = response?.bannerImage.replace(
-          "http://64.227.150.49:5000/public/",
-          ""
-        );
+        // Delete the associated image data from DigitalOcean Spaces
+        if (response.bannerImage) {
+          const key = response.bannerImage.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
 
-        const imagepath1 = path.join(__dirname, "../uploads", newBannerImage);
-
-        fs.unlink(imagepath1, (error) => {
-          if (error) {
-            console.error(error);
-          }
-        });
+          await s3.deleteObject(deleteParams).promise();
+        }
 
         await BrandPageBanner.deleteOne({ _id: id }).exec((error, result) => {
           if (error) return res.status(400).json({ error });
@@ -103,7 +101,7 @@ exports.deleteBrandPageBannerById = async (req, res) => {
         });
       }
     } else {
-      res.status(400).json({ error: `Params required ${error.message}` });
+      res.status(400).json({ error: `id not found / id required ${error.message}` });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
