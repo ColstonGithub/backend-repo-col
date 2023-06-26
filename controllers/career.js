@@ -139,13 +139,11 @@ exports.getCareer = async (req, res) => {
 exports.updateCareer = async (req, res) => {
   try {
     const { _id, name, email, mobileNo, message, subject } = req.body;
-    const pdf = req.file
-      ? process.env.API + "/public/" + req.file.filename
-      : undefined;
 
     const careerData = {
       createdBy: req.user._id,
     };
+
     if (req.file) {
       const fileContent = req.file.buffer;
       const filename = shortid.generate() + "-" + req.file.originalname;
@@ -162,9 +160,7 @@ exports.updateCareer = async (req, res) => {
       // Set the image URL in the bannerImage variable
       careerData.pdf = uploadedFile.Location;
     }
-    if (pdf != undefined && pdf != "") {
-      careerData.pdf = pdf;
-    }
+
     if (subject != undefined) {
       careerData.subject = subject;
     }

@@ -124,10 +124,23 @@ exports.getCategories = async (req, res) => {
 exports.updateCategories = async (req, res) => {
   try {
     const { _id, name, parentId, keyword, imageAltText } = req.body;
+    let categoryImage = "";
+    if (req.file) {
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
 
-    const categoryImage = req.file
-      ? process.env.API + "/public/" + req.file.filename
-      : undefined;
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      categoryImage = uploadedFile.Location;
+    }
 
     const updatedCategories = [];
 
