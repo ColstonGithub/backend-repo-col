@@ -256,9 +256,7 @@ exports.getSubCategories = async (req, res) => {
     if (!individualCat) {
       return res.status(404).json({ message: "Category not found" });
     }
-    const subCategory = category
-      .filter((cat) => cat.parentId == req.params.id)
-      .reverse();
+    const subCategory = category.filter((cat) => cat.parentId == req.params.id);
     res.status(200).json({
       subCategoryList: subCategory,
       pageTitle: individualCat.name,

@@ -342,7 +342,11 @@ exports.updateProduct = async (req, res) => {
     }
 
     // Upload product pictures
-    if (req.files && req.files["productPicture"]) {
+    if (
+      req.files &&
+      req.files["productPicture"] &&
+      req.files["productPicture"][0].img != ""
+    ) {
       productPictures = await Promise.all(
         req.files["productPicture"].map(async (file, index) => {
           const fileContent = file.buffer;
@@ -356,10 +360,9 @@ exports.updateProduct = async (req, res) => {
 
           // Upload the product picture to DigitalOcean Spaces
           const uploadedFile = await s3.upload(uploadParams).promise();
-
           return {
             img: uploadedFile.Location,
-            imageAltText: req.body.imageAltText[index],
+            imageAltText: req.body.imageAltText,
           };
         })
       );
@@ -474,15 +477,15 @@ exports.updateProduct = async (req, res) => {
     ) {
       product.colors = colorDocs;
     }
-    if (productPictures !== undefined && productPictures !== []) {
-      product.productPictures = productPictures;
-    }
+
     if (pdf != undefined) {
       product.pdf = pdf;
     }
+
     const updatedProduct = await Product.findOneAndUpdate({ _id }, product, {
       new: true,
     });
+
     return res.status(201).json({ updatedProduct });
   } catch (err) {
     res.status(500).json({ error: err.message });
