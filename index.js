@@ -41,6 +41,7 @@ const career = require("./routes/career");
 const requestForQuotation = require("./routes/requestForQuotation");
 const warrentyRegistration = require("./routes/warrentyRegistration");
 const blogsCategory = require("./routes/blogsCategory");
+const orientationCenter = require("./routes/orientation");
 
 ///////////////////////////////////////////////////////////
 
@@ -57,7 +58,6 @@ app.use(express.json());
 app.use("/public", express.static(path.join(__dirname, "uploads")));
 app.use(express.urlencoded({ extended: true }));
 
-
 // app.use(function(req, res, next) {
 //   res.setHeader('Access-Control-Allow-Origin', 'https://admin-repo-col.vercel.app');
 //   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE');
@@ -69,11 +69,13 @@ app.use(function (req, res, next) {
   //Enabling CORS
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT,PATCH");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization");
-    next();
-  });
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization"
+  );
+  next();
+});
 ////////////////////////////////////////////////////
-
 
 app.use("/api", adminRoutes);
 app.use("/api", categoryRoutes);
@@ -101,8 +103,9 @@ app.use("/api", faqCategory);
 app.use("/api", exploreCategory);
 app.use("/api", contactUs);
 app.use("/api", career);
-app.use("/api", requestForQuotation)
-app.use("/api", warrentyRegistration)
+app.use("/api", requestForQuotation);
+app.use("/api", warrentyRegistration);
+app.use("/api", orientationCenter);
 
 ////////////////////////////////////////////////////
 

@@ -91,22 +91,10 @@ exports.getCategories = async (req, res) => {
     const categories = await Category.find({}).sort({ _id: -1 });
     // .limit(limit)
     //  .skip(limit * page - limit);
-    //   console.log(limit, page);
+
     const categoryList = createCategories(categories);
     const count = await categoryList.length;
     const totalPages = Math.ceil(count / limit);
-
-    // let subCategory = [];
-    // categoryList.map((cat) => {
-    //   if (cat.children.length > 0) {
-    //     subCategory.push(cat.children);
-    //     cat.children.map((child) => {
-    //       if (child.children.length > 0) {
-    //         subCategory.push(child.children);
-    //       }
-    //     });
-    //   }
-    // });
 
     if (categories) {
       res.status(200).json({

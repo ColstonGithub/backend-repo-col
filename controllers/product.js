@@ -297,7 +297,7 @@ exports.getProducts = async (req, res) => {
     const count = await Product.countDocuments().exec();
     const totalPages = Math.ceil(count / limit);
     const products = createProducts(product);
-    let sortedByDates = sortBy(products, "updatedAt");
+    // let sortedByDates = sortBy(products, "updatedAt");
     if (product) {
       res.status(200).json({
         products,
@@ -579,19 +579,3 @@ exports.getSearchProducts = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-// exports.getProductsCode = async (req, res) => {
-//   try {
-//     const product = await Product.find({}).select("_id name").sort({ _id: -1 });
-
-//     if (product) {
-//       res.status(200).json({
-//         product,
-//       });
-//     } else {
-//       return res.status(400).json({ error: error.message });
-//     }
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };

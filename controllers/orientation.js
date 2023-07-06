@@ -1,51 +1,25 @@
-const BrandProduct = require("../models/brandProduct");
-const shortid = require("shortid");
-const slugify = require("slugify");
-// let sortBy = require("lodash.sortby");
-const path = require("path");
-const fs = require("fs");
+const Orientation = require("../models/orientation");
 
-const AWS = require("aws-sdk");
-
-const s3 = new AWS.S3({
-  endpoint: new AWS.Endpoint("https://sgp1.digitaloceanspaces.com"), // Replace with your DigitalOcean Spaces endpoint
-  accessKeyId: "DO00DRWTB9KLHRDV4HCB", // Replace with your DigitalOcean Spaces access key ID
-  secretAccessKey: "W2Ar0764cy4Y7rsWCecsoZxOZ3mJTJoqxWBo+uppV/c", // Replace with your DigitalOcean Spaces secret access key
-});
-
-exports.addbrandProduct = async (req, res) => {
+exports.addOrientationCenter = async (req, res) => {
   try {
-    const brandObj = {
-      title: req.body.title,
-      slug: slugify(req.body.title),
-      text: req.body.text,
-      imageAltText: req.body.imageAltText,
+    const orientationObj = {
+      city: req.body.city,
+      centerName: req.body.centerName,
+      centerAddress: req.body.centerAddress,
+      ocAppointment: req.body.ocAppointment,
+      service: req.body.service,
+      location: req.body.location,
+      purchaseAssistance: req.body.purchaseAssistance,
+      email: req.body.email,
       createdBy: req.user._id,
     };
 
-    if (req.file) {
-      const fileContent = req.file.buffer;
-      const filename = shortid.generate() + "-" + req.file.originalname;
-      const uploadParams = {
-        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
-        Key: filename,
-        Body: fileContent,
-        ACL: "public-read",
-      };
+    const orientation = new Orientation(orientationObj);
 
-      // Upload the file to DigitalOcean Spaces
-      const uploadedFile = await s3.upload(uploadParams).promise();
-
-      // Set the image URL in the bannerImage variable
-      brandObj.image = uploadedFile.Location;
-    }
-
-    const brand = new BrandProduct(brandObj);
-
-    brand.save((error, brandProd) => {
+    orientation.save((error, orientationProd) => {
       if (error) return res.status(400).json({ error });
-      if (brandProd) {
-        return res.status(201).json({ brandProd });
+      if (orientationProd) {
+        return res.status(201).json({ orientationProd });
       }
     });
   } catch (err) {
@@ -53,16 +27,14 @@ exports.addbrandProduct = async (req, res) => {
   }
 };
 
-exports.getbrandProductDetailsById = async (req, res) => {
+exports.getOrientationCenterDetailsById = async (req, res) => {
   try {
-    const { brandproductId } = req.params;
-    if (brandproductId) {
-      await BrandProduct.findOne({ _id: brandproductId }).exec(
-        (error, brandproduct) => {
-          if (error) return res.status(400).json({ error });
-          res.status(200).json({ brandproduct });
-        }
-      );
+    const { id } = req.params;
+    if (id) {
+      await Orientation.findOne({ _id: id }).exec((error, orientationProd) => {
+        if (error) return res.status(400).json({ error });
+        res.status(200).json({ orientationProd });
+      });
     } else {
       return res.status(400).json({ error: "Params required" });
     }
@@ -72,33 +44,21 @@ exports.getbrandProductDetailsById = async (req, res) => {
 };
 
 // new update
-exports.deletebrandProducttById = async (req, res) => {
+exports.deleteOrientationCenterById = async (req, res) => {
   try {
-    const { brandProductId } = req.body;
-    if (brandProductId) {
-      const response = await BrandProduct.findOne({ _id: brandProductId });
+    const { id } = req.body;
+    if (id) {
+      const response = await Orientation.findOne({ _id: id });
 
       if (response) {
-        // Delete the associated image data from DigitalOcean Spaces
-        if (response.image) {
-          const key = response.image.split("/").pop();
-          const deleteParams = {
-            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
-            Key: key,
-          };
-
-          await s3.deleteObject(deleteParams).promise();
-        }
-        await BrandProduct.deleteOne({ _id: brandProductId }).exec(
-          (error, result) => {
-            if (error) return res.status(400).json({ error });
-            if (result) {
-              res
-                .status(202)
-                .json({ result, message: "Data has been deleted" });
-            }
+        await Orientation.deleteOne({ _id: id }).exec((error, result) => {
+          if (error) return res.status(400).json({ error });
+          if (result) {
+            res
+              .status(202)
+              .json({ message: "Data has been deleted successful" });
           }
-        );
+        });
       }
     } else {
       res.status(400).json({ error: "Params required" });
@@ -113,10 +73,14 @@ function createProducts(products) {
   for (let prod of products) {
     productList.push({
       _id: prod._id,
-      title: prod.title,
-      text: prod.text,
-      image: prod.image,
-      imageAltText: prod.imageAltText,
+      city: prod.city,
+      centerName: prod.centerName,
+      centerAddress: prod.centerAddress,
+      ocAppointment: prod.ocAppointment,
+      service: prod.service,
+      location: prod.location,
+      purchaseAssistance: prod.purchaseAssistance,
+      email: prod.email,
       createdAt: prod.createdAt,
     });
   }
@@ -124,21 +88,21 @@ function createProducts(products) {
   return productList;
 }
 
-exports.getBrandProducts = async (req, res) => {
+exports.getOrientationCenters = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
   const page = parseInt(req.query.page) || 1; // Set a default page number of 1
   try {
-    const brandProduct = await BrandProduct.find({})
+    const orientationProduct = await Orientation.find({})
       .sort({ _id: -1 })
       .limit(limit)
       .skip(limit * page - limit);
 
-    const count = await BrandProduct.countDocuments().exec();
+    const count = await Orientation.countDocuments().exec();
     const totalPages = Math.ceil(count / limit);
-    const brandProducts = createProducts(brandProduct);
-    if (brandProduct) {
+    const orientationProducts = createProducts(orientationProduct);
+    if (orientationProducts) {
       res.status(200).json({
-        brandProducts,
+        orientationProducts,
         pagination: { currentPage: page, totalPages, totalItems: count },
       });
     } else {
@@ -149,37 +113,34 @@ exports.getBrandProducts = async (req, res) => {
   }
 };
 
-exports.updateBrandProduct = async (req, res) => {
+exports.updateOrientationCenter = async (req, res) => {
   try {
-    const { _id, title, text, imageAltText } = req.body;
+    const {
+      _id,
+      city,
+      centerName,
+      centerAddress,
+      ocAppointment,
+      service,
+      location,
+      purchaseAssistance,
+      email,
+    } = req.body;
 
-    const brandProduct = {
-      title,
-      text,
-      imageAltText,
-      slug: slugify(req.body.title),
+    const orientationProduct = {
+      city,
+      centerName,
+      centerAddress,
+      ocAppointment,
+      service,
+      location,
+      purchaseAssistance,
+      email,
     };
 
-    if (req.file) {
-      const fileContent = req.file.buffer;
-      const filename = shortid.generate() + "-" + req.file.originalname;
-      const uploadParams = {
-        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
-        Key: filename,
-        Body: fileContent,
-        ACL: "public-read",
-      };
-
-      // Upload the file to DigitalOcean Spaces
-      const uploadedFile = await s3.upload(uploadParams).promise();
-
-      // Set the image URL in the bannerImage variable
-      brandProduct.image = uploadedFile.Location;
-    }
-
-    const updatedProduct = await BrandProduct.findOneAndUpdate(
+    const updatedProduct = await Orientation.findOneAndUpdate(
       { _id },
-      brandProduct,
+      orientationProduct,
       {
         new: true,
       }

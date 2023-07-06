@@ -7,7 +7,7 @@ const {
   deleteOrientationCenterById,
   getOrientationCenters,
   updateOrientationCenter,
-} = require("../controllers/orientationCenter");
+} = require("../controllers/orientation");
 
 const {
   requireSignin,
