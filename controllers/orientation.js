@@ -115,36 +115,27 @@ exports.getOrientationCenters = async (req, res) => {
 
 exports.updateOrientationCenter = async (req, res) => {
   try {
-    const {
-      _id,
-      city,
-      centerName,
-      centerAddress,
-      ocAppointment,
-      service,
-      location,
-      purchaseAssistance,
-      email,
-    } = req.body;
-
-    const orientationProduct = {
-      city,
-      centerName,
-      centerAddress,
-      ocAppointment,
-      service,
-      location,
-      purchaseAssistance,
-      email,
+    const { id, data } = req.body;
+    const _id = id;
+    const orientationObject = {
+      city: data?.city,
+      centerName: data?.centerName,
+      centerAddress: data?.centerAddress,
+      location: data?.location,
+      email: data?.email,
+      ocAppointment: data?.ocAppointment,
+      service: data?.service,
+      purchaseAssistance: data?.purchaseAssistance,
     };
 
     const updatedProduct = await Orientation.findOneAndUpdate(
       { _id },
-      orientationProduct,
+      orientationObject,
       {
         new: true,
       }
     );
+
     return res.status(201).json({ updatedProduct });
   } catch (err) {
     res.status(500).json({ error: err.message });

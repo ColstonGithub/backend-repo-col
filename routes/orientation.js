@@ -24,7 +24,7 @@ router.post(
 
 router.get("/orientationCenter/getOrientationCenters", getOrientationCenters);
 router.get(
-  "/orientationCenter/:orientationCenterById",
+  "/orientationCenter/:id",
   getOrientationCenterDetailsById
 );
 
