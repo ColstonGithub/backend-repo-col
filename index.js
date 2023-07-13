@@ -42,7 +42,7 @@ const requestForQuotation = require("./routes/requestForQuotation");
 const warrentyRegistration = require("./routes/warrentyRegistration");
 const blogsCategory = require("./routes/blogsCategory");
 const orientationCenter = require("./routes/orientation");
-
+const whereToBuy = require("./routes/whereToBuy");
 ///////////////////////////////////////////////////////////
 
 // environment variable or constants
@@ -106,7 +106,7 @@ app.use("/api", career);
 app.use("/api", requestForQuotation);
 app.use("/api", warrentyRegistration);
 app.use("/api", orientationCenter);
-
+app.use("/api", whereToBuy);
 ////////////////////////////////////////////////////
 
 app.use(notFound);
