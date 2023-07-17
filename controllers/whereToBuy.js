@@ -141,3 +141,41 @@ exports.updateWhereToBuy = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+exports.getFilterWhereToBuyByCity = async (req, res) => {
+  const { selectedCity } = req.body;
+
+  try {
+    if (!selectedCity) {
+      return res.status(400).json({ error: "City parameter is required" });
+    }
+
+    const regex = new RegExp(selectedCity, "i");
+    const query = { city: regex };
+
+    const whereToBuyProducts = await WhereToBuy.find(query);
+
+    if (whereToBuyProducts.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "No data found for the selected city" });
+    }
+
+    const filteredProducts = whereToBuyProducts.map((product) => {
+      return {
+        city: product.city,
+        centerName: product.centerName,
+        centerAddress: product.centerAddress,
+        ocAppointment: product.ocAppointment,
+        service: product.service,
+        location: product.location,
+        purchaseAssistance: product.purchaseAssistance,
+        email: product.email,
+        createdBy: product.createdBy,
+      };
+    });
+
+    res.status(200).json({ whereToBuyFiltered: filteredProducts });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

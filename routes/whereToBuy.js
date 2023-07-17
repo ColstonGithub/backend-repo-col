@@ -6,7 +6,7 @@ const {
   getWhereToBuyDetailsById,
   deleteWhereToBuyById,
   getWhereToBuyCenters,
-  updateWhereToBuy,
+  updateWhereToBuy,getFilterWhereToBuyByCity
 } = require("../controllers/whereToBuy");
 
 const {
@@ -24,6 +24,9 @@ router.post(
 
 router.get("/whereToBuy/getWhereToBuyCenters", getWhereToBuyCenters);
 router.get("/whereToBuy/:id", getWhereToBuyDetailsById);
+
+
+router.post("/whereToBuy/getFilterWhereToBuyByCity", getFilterWhereToBuyByCity);
 
 router.patch(
   "/whereToBuy/update",
