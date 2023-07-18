@@ -75,11 +75,11 @@ const signin = async (req, res) => {
           });
         } else {
           return res.status(400).json({
-            message: "Invalid Email and Password",
+            message: "Invalid Credentials",
           });
         }
       } else {
-        return res.status(400).json({ message: "Something went wrong" });
+        return res.status(400).json({ message: "User not found" });
       }
     });
   } catch (err) {
