@@ -2,18 +2,44 @@ const WarrentyRegistration = require("../models/warrentyRegistration");
 const shortid = require("shortid");
 const slugify = require("slugify");
 const bcrypt = require("bcrypt");
+const AWS = require("aws-sdk");
+
+const s3 = new AWS.S3({
+  endpoint: new AWS.Endpoint("https://sgp1.digitaloceanspaces.com"), // Replace with your DigitalOcean Spaces endpoint
+  accessKeyId: "DO00DRWTB9KLHRDV4HCB", // Replace with your DigitalOcean Spaces access key ID
+  secretAccessKey: "W2Ar0764cy4Y7rsWCecsoZxOZ3mJTJoqxWBo+uppV/c", // Replace with your DigitalOcean Spaces secret access key
+});
+
 exports.createWarrentyRegistration = async (req, res) => {
   try {
-    const { name, email, subject, mobileNo, password } = req.body;
+    const { name, email, subject, mobileNo } = req.body;
 
-    const hash_password = await bcrypt.hash(password, 10);
+    let image;
+
+    if (req.file) {
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      image = uploadedFile.Location;
+    }
+
     const warrentyRegistration = new WarrentyRegistration({
       name,
       slug: slugify(name),
       email,
+      image,
       mobileNo,
       subject,
-      hash_password,
       // createdBy: req.user._id,
     });
 
@@ -53,14 +79,28 @@ exports.deleteWarrentyRegistrationById = async (req, res) => {
   try {
     const { id } = req.body;
     if (id) {
-      await WarrentyRegistration.deleteOne({ _id: id }).exec(
-        (error, result) => {
-          if (error) return res.status(400).json({ error });
-          if (result) {
-            res.status(202).json({ result });
-          }
+      const response = await WarrentyRegistration.findOne({ _id: id });
+
+      if (response) {
+        if (response.image) {
+          const key = response.image.split("/").pop();
+          const deleteParams = {
+            Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+            Key: key,
+          };
+
+          await s3.deleteObject(deleteParams).promise();
         }
-      );
+
+        await WarrentyRegistration.deleteOne({ _id: id }).exec(
+          (error, result) => {
+            if (error) return res.status(400).json({ error });
+            if (result) {
+              res.status(202).json({ result });
+            }
+          }
+        );
+      }
     } else {
       res.status(400).json({ error: "Params required" });
     }
@@ -97,11 +137,30 @@ exports.getWarrentyRegistration = async (req, res) => {
 
 exports.updateWarrentyRegistration = async (req, res) => {
   try {
-    const { _id, name, email, mobileNo, subject, password } = req.body;
-    const hash_password = await bcrypt.hash(password, 10);
+    const { _id, name, email, mobileNo, subject } = req.body;
+
     const warrentyReg = {
       // createdBy: req.user._id,
     };
+
+    let image;
+
+    if (req.file) {
+      const fileContent = req.file.buffer;
+      const filename = shortid.generate() + "-" + req.file.originalname;
+      const uploadParams = {
+        Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
+        Key: filename,
+        Body: fileContent,
+        ACL: "public-read",
+      };
+
+      // Upload the file to DigitalOcean Spaces
+      const uploadedFile = await s3.upload(uploadParams).promise();
+
+      // Set the image URL in the bannerImage variable
+      image = uploadedFile.Location;
+    }
 
     if (subject != undefined) {
       warrentyReg.subject = subject;
@@ -110,8 +169,8 @@ exports.updateWarrentyRegistration = async (req, res) => {
       warrentyReg.mobileNo = mobileNo;
     }
 
-    if (hash_password != undefined) {
-      warrentyReg.hash_password = hash_password;
+    if (image != undefined) {
+      warrentyReg.image = image;
     }
 
     if (name != undefined) {

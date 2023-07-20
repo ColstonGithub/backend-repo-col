@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   requireSignin,
   adminMiddleware,
+  upload,
 } = require("../common-middleware");
 
 const {
@@ -16,6 +17,7 @@ const {
 
 router.post(
   "/warrentyregistration/create",
+  upload.single("image"),
   createWarrentyRegistration
 );
 
@@ -34,8 +36,7 @@ router.post(
 
 router.patch(
   "/warrentyregistration/update",
-  requireSignin,
-  adminMiddleware,
+  upload.single("image"),
   updateWarrentyRegistration
 );
 

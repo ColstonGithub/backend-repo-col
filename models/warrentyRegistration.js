@@ -14,10 +14,8 @@ const warrentyRegistrationSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    hash_password: {
-      type: String,
-      reuired: true,
-    },
+    image: { type: String },
+
     mobileNo: {
       type: String,
       required: true,
@@ -25,7 +23,6 @@ const warrentyRegistrationSchema = new mongoose.Schema(
     },
     subject: {
       type: String,
-      required: true,
       trim: true,
     },
     // createdBy: {
