@@ -6,10 +6,7 @@ exports.addWhereToBuy = async (req, res) => {
       city: req.body.city,
       centerName: req.body.centerName,
       centerAddress: req.body.centerAddress,
-      ocAppointment: req.body.ocAppointment,
-      service: req.body.service,
       location: req.body.location,
-      purchaseAssistance: req.body.purchaseAssistance,
       email: req.body.email,
       createdBy: req.user._id,
     };
@@ -76,10 +73,7 @@ function createProducts(products) {
       city: prod.city,
       centerName: prod.centerName,
       centerAddress: prod.centerAddress,
-      ocAppointment: prod.ocAppointment,
-      service: prod.service,
       location: prod.location,
-      purchaseAssistance: prod.purchaseAssistance,
       email: prod.email,
       createdAt: prod.createdAt,
     });
@@ -123,9 +117,6 @@ exports.updateWhereToBuy = async (req, res) => {
       centerAddress: data?.centerAddress,
       location: data?.location,
       email: data?.email,
-      ocAppointment: data?.ocAppointment,
-      service: data?.service,
-      purchaseAssistance: data?.purchaseAssistance,
     };
 
     const updatedProduct = await WhereToBuy.findOneAndUpdate(
@@ -165,10 +156,7 @@ exports.getFilterWhereToBuyByCity = async (req, res) => {
         city: product.city,
         centerName: product.centerName,
         centerAddress: product.centerAddress,
-        ocAppointment: product.ocAppointment,
-        service: product.service,
         location: product.location,
-        purchaseAssistance: product.purchaseAssistance,
         email: product.email,
         createdBy: product.createdBy,
       };

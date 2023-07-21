@@ -14,20 +14,13 @@ const whereToBuySchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    ocAppointment: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    service: {
-      type: String,
-      trim: true,
-    },
+
+
     location: {
       type: String,
       trim: true,
     },
-    purchaseAssistance: { type: String },
+
     email: { type: String },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
