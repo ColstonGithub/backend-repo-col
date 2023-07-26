@@ -7,14 +7,15 @@ const {
   deleteCategories,
   updateCategories,
   getCategoriesById,
-  getSubCategories
+  getSubCategories,
+  updateOrder,
 } = require("../controllers/category");
 
 const {
   requireSignin,
   adminMiddleware,
   // superAdminMiddleware,
-  upload
+  upload,
 } = require("../common-middleware");
 
 router.post(
@@ -38,7 +39,7 @@ router.patch(
   upload.single("categoryImage"),
   updateCategories
 );
-
+router.put("/category/order", updateOrder);
 router.post(
   "/category/delete",
   requireSignin,

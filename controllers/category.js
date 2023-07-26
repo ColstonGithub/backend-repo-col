@@ -180,6 +180,22 @@ exports.updateCategories = async (req, res) => {
   }
 };
 
+exports.updateOrder = async (req, res) => {
+  try {
+    const { categoryOrder } = req.body;
+
+    // Update the "order" field for each category based on the new order
+    for (let i = 0; i < categoryOrder.length; i++) {
+      const categoryId = categoryOrder[i];
+      await Category.findByIdAndUpdate(categoryId, { order: i });
+    }
+
+    res.status(200).json({ message: "Category order updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.deleteCategories = async (req, res) => {
   try {
     const { ids } = req.body.payload;
