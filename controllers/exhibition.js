@@ -1,8 +1,6 @@
 const Exhibition = require("../models/exhibition");
 const shortid = require("shortid");
 const slugify = require("slugify");
-const path = require("path");
-const fs = require("fs");
 
 const AWS = require("aws-sdk");
 
@@ -17,6 +15,7 @@ exports.createExhibition = async (req, res) => {
     const { title, bannerImageAltText } = req.body;
 
     let bannerImage = "";
+
     if (req.file) {
       const fileContent = req.file.buffer;
       const filename = shortid.generate() + "-" + req.file.originalname;
@@ -136,7 +135,7 @@ exports.getExhibitions = async (req, res) => {
 
 exports.updateExhibition = async (req, res) => {
   try {
-    const { _id, title, buttonText, bannerImageAltText } = req.body;
+    const { _id, title, bannerImageAltText } = req.body;
 
     const pageBanner = {
       createdBy: req.user._id,
@@ -144,6 +143,7 @@ exports.updateExhibition = async (req, res) => {
 
     let bannerImage = "";
     if (req.file) {
+      console.log("req inside  ", req.file);
       const fileContent = req.file.buffer;
       const filename = shortid.generate() + "-" + req.file.originalname;
       const uploadParams = {
@@ -155,20 +155,17 @@ exports.updateExhibition = async (req, res) => {
 
       // Upload the file to DigitalOcean Spaces
       const uploadedFile = await s3.upload(uploadParams).promise();
-
       // Set the image URL in the bannerImage variable
       pageBanner.bannerImage = uploadedFile.Location;
+
     }
 
-    if (bannerImage != undefined) {
+    if (bannerImage != "") {
       pageBanner.bannerImage = bannerImage;
     }
+
     if (bannerImageAltText != undefined) {
       pageBanner.bannerImageAltText = bannerImageAltText;
-    }
-
-    if (buttonText != undefined) {
-      pageBanner.buttonText = buttonText;
     }
 
     if (title != undefined) {
