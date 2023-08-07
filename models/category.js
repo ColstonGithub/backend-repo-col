@@ -10,14 +10,15 @@ const categorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    keyword : {
-      type:String,
+    keyword: {
+      type: String,
     },
     categoryImage: { type: String },
     imageAltText: {
       type: String,
       trim: true,
     },
+    customOrder: { type: Number },
     parentId: {
       type: String,
     },
@@ -26,7 +27,6 @@ const categorySchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-
   },
   { timestamps: true }
 );

@@ -1,9 +1,6 @@
 const Category = require("../models/category");
 const slugify = require("slugify");
 const shortid = require("shortid");
-const path = require("path");
-const fs = require("fs");
-
 const AWS = require("aws-sdk");
 
 const s3 = new AWS.S3({
@@ -184,15 +181,20 @@ exports.updateOrder = async (req, res) => {
   try {
     const { categoryOrder } = req.body;
 
-    // Update the "order" field for each category based on the new order
-    for (let i = 0; i < categoryOrder.length; i++) {
-      const categoryId = categoryOrder[i];
-      await Category.findByIdAndUpdate(categoryId, { order: i });
+    for (let index = 0; index < categoryOrder.length; index++) {
+      const id = categoryOrder[index];
+      await Category.updateOne(
+        { _id: id },
+        { $set: { customOrder: index + 1 } }
+      );
     }
 
-    res.status(200).json({ message: "Category order updated successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(201).json({
+      message: "Category order changed successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
   }
 };
 
@@ -253,17 +255,21 @@ exports.getCategoriesById = async (req, res) => {
 exports.getSubCategories = async (req, res) => {
   try {
     const category = await Category.find({}).select(
-      "_id parentId name imageAltText categoryImage"
+      "_id parentId name imageAltText categoryImage customOrder"
     );
     const individualCat = await Category.findOne({ _id: req.params.id });
-
     if (!individualCat) {
       return res.status(404).json({ message: "Category not found" });
     }
     const subCategory = category.filter((cat) => cat.parentId == req.params.id);
+
+    // Sort the subCategory array by customOrder
+    subCategory.sort((a, b) => a.customOrder - b.customOrder);
+
     res.status(200).json({
       subCategoryList: subCategory,
       pageTitle: individualCat.name,
+      parentId: req.params.id,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
