@@ -173,33 +173,63 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-exports.getProductDetailsById = (req, res) => {
+// exports.getProductDetailsById = (req, res) => {
+//   try {
+//     const { productId } = req.params;
+
+//     if (productId) {
+//       console.log("productId ", productId);
+//       Product.findOne({ _id: productId }).exec((error, product) => {
+//         console.log("product ", product);
+//         if (error) return res.status(400).json({ error });
+//         if (product) {
+//           console.log("product ", product);
+//           Product.find({ category: product.category }).exec(
+//             (error, relatedProducts) => {
+//               if (error) {
+//                 return res.status(400).json({ error });
+//               } else {
+//                 res
+//                   .status(200)
+//                   .json({ product, relatedProducts: relatedProducts });
+//               }
+//             }
+//           );
+//         }
+//       });
+//     } else {
+//       return res.status(400).json({ error: "Params required" });
+//     }
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// };
+
+
+exports.getProductDetailsById = async (req, res) => {
   try {
     const { productId } = req.params;
-    if (productId) {
-      Product.findOne({ _id: productId }).exec((error, product) => {
-        if (error) return res.status(400).json({ error });
-        if (product) {
-          Product.find({ category: product.category }).exec(
-            (error, relatedProducts) => {
-              if (error) {
-                return res.status(400).json({ error });
-              } else {
-                res
-                  .status(200)
-                  .json({ product, relatedProducts: relatedProducts });
-              }
-            }
-          );
-        }
-      });
-    } else {
+
+    if (!productId) {
       return res.status(400).json({ error: "Params required" });
     }
+
+    const product = await Product.findOne({ _id: productId }).exec();
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    const relatedProducts = await Product.find({ category: product.category }).exec();
+
+    res.status(200).json({ product, relatedProducts });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+
 
 // new update
 exports.deleteProductById = async (req, res) => {
@@ -298,6 +328,7 @@ exports.getProducts = async (req, res) => {
     const totalPages = Math.ceil(count / limit);
     const products = createProducts(product);
     // let sortedByDates = sortBy(products, "updatedAt");
+    console.log("products ", products);
     if (product) {
       res.status(200).json({
         products,
@@ -373,7 +404,6 @@ exports.updateProduct = async (req, res) => {
         })
       );
     }
-    console.log("updated File", productPictures);
     let colors =
       req.files[`colorPicture1`] && req.files[`colorPicture1`] !== undefined
         ? req.body.colorName
@@ -510,7 +540,7 @@ exports.getProductsByCategoryId = async (req, res) => {
       .sort({ _id: -1 })
       .limit(limit)
       .skip(limit * page - limit)
-      .select("_id name productPictures category");
+      .select("_id name productPictures category customOrder");
 
     const count = await products.length;
     const totalPages = Math.ceil(count / limit);
@@ -519,6 +549,8 @@ exports.getProductsByCategoryId = async (req, res) => {
     if (!individualCat) {
       return res.status(404).json({ message: "Category not found" });
     }
+    products.sort((a, b) => a.customOrder - b.customOrder);
+
     if (products) {
       res.status(200).json({
         products,
@@ -585,5 +617,24 @@ exports.getSearchProducts = async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateOrder = async (req, res) => {
+  try {
+    const { productOrder } = req.body;
+    for (let index = 0; index < productOrder.length; index++) {
+      const id = productOrder[index];
+      await Product.updateOne(
+        { _id: id },
+        { $set: { customOrder: index + 1 } }
+      );
+    }
+    return res.status(201).json({
+      message: "Product order changed successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
   }
 };

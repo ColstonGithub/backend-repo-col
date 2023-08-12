@@ -2,7 +2,7 @@ const express = require("express");
 const {
   requireSignin,
   adminMiddleware,
-  upload
+  upload,
 } = require("../common-middleware");
 
 const {
@@ -13,7 +13,8 @@ const {
   updateProduct,
   getProductsByCategoryId,
   getSearchProducts,
-  getNewArrivalProducts
+  getNewArrivalProducts,
+  updateOrder,
 } = require("../controllers/product");
 
 const router = express.Router();
@@ -49,6 +50,8 @@ router.post("/product/getProducts/categoryid", getProductsByCategoryId);
 router.post("/product/getnewarrival", getNewArrivalProducts);
 
 router.post("/product/getsearchproducts", getSearchProducts);
+
+router.patch("/product/updateOrder", updateOrder);
 
 router.patch(
   "/product/update",

@@ -54,7 +54,6 @@ exports.createBanner = async (req, res) => {
 exports.getBannersBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-    //console.log(slug)
     await Banner.findOne({ slug: slug })
       .select("_id banners title slug type")
       .exec((error, banner) => {

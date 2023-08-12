@@ -143,7 +143,6 @@ exports.updateExhibition = async (req, res) => {
 
     let bannerImage = "";
     if (req.file) {
-      console.log("req inside  ", req.file);
       const fileContent = req.file.buffer;
       const filename = shortid.generate() + "-" + req.file.originalname;
       const uploadParams = {

@@ -39,7 +39,9 @@ router.patch(
   upload.single("categoryImage"),
   updateCategories
 );
+
 router.patch("/category/updateOrder", updateOrder);
+
 router.post(
   "/category/delete",
   requireSignin,

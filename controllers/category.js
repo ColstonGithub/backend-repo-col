@@ -1,4 +1,5 @@
 const Category = require("../models/category");
+const Product = require("../models/product");
 const slugify = require("slugify");
 const shortid = require("shortid");
 const AWS = require("aws-sdk");
@@ -26,6 +27,7 @@ function createCategories(categories, parentId = null) {
       categoryImage: cate.categoryImage,
       parentId: cate.parentId,
       type: cate.type,
+      customOrder: cate.customOrder,
       imageAltText: cate.imageAltText,
       keyword: cate.keyword,
       createdAt: cate.createdAt,
@@ -92,8 +94,9 @@ exports.getCategories = async (req, res) => {
     const categoryList = createCategories(categories);
     const count = await categoryList.length;
     const totalPages = Math.ceil(count / limit);
-
-    if (categories) {
+    // Sort the subCategory array by customOrder
+    categoryList.sort((a, b) => a.customOrder - b.customOrder);
+    if (categoryList) {
       res.status(200).json({
         categoryList,
         // pagination: { currentPage: page, totalPages, totalItems: count },
@@ -263,11 +266,28 @@ exports.getSubCategories = async (req, res) => {
     }
     const subCategory = category.filter((cat) => cat.parentId == req.params.id);
 
+    const subCategoryIds = subCategory.map((cat) => cat._id);
+
+    const products = await Product.find({ category: { $in: subCategoryIds } });
+
+    const subCategoryWithProductCount = subCategory.map((cat) => {
+      const count = products.filter(
+        (product) => product.category.toString() === cat._id.toString()
+      ).length;
+      return {
+        ...cat,
+        productCount: count,
+      };
+    });
+
+    const totalProductCount = products.length;
+
     // Sort the subCategory array by customOrder
-    subCategory.sort((a, b) => a.customOrder - b.customOrder);
+    subCategoryWithProductCount.sort((a, b) => a.customOrder - b.customOrder);
 
     res.status(200).json({
-      subCategoryList: subCategory,
+      subCategoryList: subCategoryWithProductCount,
+      totalProductCount: totalProductCount, // Adding totalProductCount to the response
       pageTitle: individualCat.name,
       parentId: req.params.id,
     });
@@ -275,3 +295,33 @@ exports.getSubCategories = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// exports.getSubCategories = async (req, res) => {
+//   try {
+//     const category = await Category.find({}).select(
+//       "_id parentId name imageAltText categoryImage customOrder"
+//     );
+//     const individualCat = await Category.findOne({ _id: req.params.id });
+//     if (!individualCat) {
+//       return res.status(404).json({ message: "Category not found" });
+//     }
+//     const subCategory = category.filter((cat) => cat.parentId == req.params.id);
+
+//     const subCategoryIds = subCategory.map((cat) => cat._id); // Extract _id from subCategory
+
+//     const products = await Product.find({ category: { $in: subCategoryIds } }); // Find products using _id of subCategory
+
+//     const productCount = products.length;
+
+//     // Sort the subCategory array by customOrder
+//     subCategory.sort((a, b) => a.customOrder - b.customOrder);
+
+//     res.status(200).json({
+//       subCategoryList: subCategory,
+//       pageTitle: individualCat.name,
+//       parentId: req.params.id,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };

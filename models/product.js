@@ -46,7 +46,7 @@ const productSchema = new mongoose.Schema(
     pdf: {
       type: String,
     },
-
+    customOrder: { type: Number },
     productPictures: [
       {
         img: {
