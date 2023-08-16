@@ -25,7 +25,7 @@ router.post(
 
 router.post("/admin/signin", validateSigninRequest, isRequestValidated, signin);
 
-router.post("/admin/signout", requireSignin, signout);
+router.post("/admin/signout", signout);
 
 router.get("/user", requireSignin, getUserData);
 
