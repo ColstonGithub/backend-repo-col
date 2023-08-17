@@ -271,11 +271,17 @@ exports.getSubCategories = async (req, res) => {
     const products = await Product.find({ category: { $in: subCategoryIds } });
 
     const subCategoryWithProductCount = subCategory.map((cat) => {
+      console.log(cat);
       const count = products.filter(
         (product) => product.category.toString() === cat._id.toString()
       ).length;
+
       return {
-        ...cat,
+        _id: cat._id, // Include only the necessary properties
+        name: cat.name,
+        imageAltText: cat.imageAltText,
+        categoryImage: cat.categoryImage,
+        customOrder: cat.customOrder,
         productCount: count,
       };
     });
@@ -284,7 +290,7 @@ exports.getSubCategories = async (req, res) => {
 
     // Sort the subCategory array by customOrder
     subCategoryWithProductCount.sort(
-      (a, b) => a._doc.customOrder - b._doc.customOrder
+      (a, b) => a.customOrder - b.customOrder
     );
     res.status(200).json({
       subCategoryList: subCategoryWithProductCount,
