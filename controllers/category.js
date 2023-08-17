@@ -283,8 +283,9 @@ exports.getSubCategories = async (req, res) => {
     const totalProductCount = products.length;
 
     // Sort the subCategory array by customOrder
-    subCategoryWithProductCount.sort((a, b) => a.customOrder - b.customOrder);
-
+    subCategoryWithProductCount.sort(
+      (a, b) => a._doc.customOrder - b._doc.customOrder
+    );
     res.status(200).json({
       subCategoryList: subCategoryWithProductCount,
       totalProductCount: totalProductCount, // Adding totalProductCount to the response
