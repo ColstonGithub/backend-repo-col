@@ -16,7 +16,7 @@ exports.addCareerDetails = async (req, res) => {
       contentHeading: req.body.contentHeading,
       createdBy: req.user._id,
     };
-    
+
     // Upload image files
     if (req.file) {
       const fileContent = req.file.buffer;
@@ -82,18 +82,17 @@ exports.deleteCareerDetailsById = async (req, res) => {
         Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
         Key: key,
       };
+      try {
+        await s3.deleteObject(deleteParams).promise();
 
-      await s3.deleteObject(deleteParams).promise();
-    }
-
-    try {
-      await CareerDetails.deleteOne({ _id: id }); // Delete the document if image deletion is successful
-      res.status(200).json({
-        message: "Career Details deleted successfully",
-      });
-    } catch (err) {
-      console.error("Error deleting image or document:", err);
-      res.status(500).json({ error: "Failed to delete image or document" });
+        await CareerDetails.deleteOne({ _id: id }); // Delete the document if image deletion is successful
+        res.status(200).json({
+          message: "Career Details deleted successfully",
+        });
+      } catch (err) {
+        console.error("Error deleting image or document:", err);
+        res.status(500).json({ error: "Failed to delete image or document" });
+      }
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
