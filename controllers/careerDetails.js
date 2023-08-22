@@ -16,7 +16,8 @@ exports.addCareerDetails = async (req, res) => {
       contentHeading: req.body.contentHeading,
       createdBy: req.user._id,
     };
-
+    
+    // Upload image files
     if (req.file) {
       const fileContent = req.file.buffer;
       const filename = shortid.generate() + "-" + req.file.originalname;
@@ -68,41 +69,31 @@ exports.getCareerDetailsById = async (req, res) => {
 exports.deleteCareerDetailsById = async (req, res) => {
   try {
     const id = req.body.id;
-    console.log(id);
-    const CareerDetail = await CareerDetails.findOne({ _id: id });
-    console.log(CareerDetail);
-    if (!CareerDetail) {
+    const careerDetail = await CareerDetails.findOne({ _id: id });
+    if (!careerDetail) {
       return res.status(404).json({ error: "Career Details not found" });
     }
 
     // Delete the associated image data from DigitalOcean Spaces
-    if (CareerDetail?.image) {
-      const key = CareerDetail.image.split("/").pop();
+
+    if (careerDetail?.image) {
+      const key = careerDetail?.image.split("/").pop();
       const deleteParams = {
         Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
         Key: key,
       };
 
-      await s3
-        .deleteObject(deleteParams)
-        .promise()
-        .then(async (res) => {
-          if (res) {
-            await CareerDetails.findByIdAndDelete(w);
-            res
-              .status(200)
-              .json({ message: "Career Details deleted successfully" });
-          } else {
-            return res
-              .status(404)
-              .json({ error: "Career Details deletion failed" });
-          }
-        })
-        .catch((err) => {
-          return res
-            .status(404)
-            .json({ error: "Career Details deletion failed " });
-        });
+      await s3.deleteObject(deleteParams).promise();
+    }
+
+    try {
+      await CareerDetails.deleteOne({ _id: id }); // Delete the document if image deletion is successful
+      res.status(200).json({
+        message: "Career Details deleted successfully",
+      });
+    } catch (err) {
+      console.error("Error deleting image or document:", err);
+      res.status(500).json({ error: "Failed to delete image or document" });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
