@@ -271,7 +271,6 @@ exports.getSubCategories = async (req, res) => {
     const products = await Product.find({ category: { $in: subCategoryIds } });
 
     const subCategoryWithProductCount = subCategory.map((cat) => {
-      console.log(cat);
       const count = products.filter(
         (product) => product.category.toString() === cat._id.toString()
       ).length;
