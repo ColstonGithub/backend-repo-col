@@ -1,24 +1,24 @@
-const express = require('express');
-const https = require('https');
-const fs = require('fs');
+const express = require("express");
+const https = require("https");
+const fs = require("fs");
 const port = 5000;
 
-var key = fs.readFileSync('./private.key');
-var cert = fs.readFileSync('./certificate.crt');
+var key = fs.readFileSync("./private.key");
+var cert = fs.readFileSync("./certificate.crt");
 var options = {
   key: key,
-  cert: cert
+  cert: cert,
 };
 
-app = express()
-app.get('/', (req, res) => {
-   res.send('Now using https..');
+app = express();
+app.get("/", (req, res) => {
+  res.send("Now using https..");
 });
 
 var server = https.createServer(options, app);
 
 server.listen(port, () => {
-  console.log("server starting on port : " + port)
+  console.log("server starting on port : " + port);
 });
 
 const dotenv = require("dotenv");
@@ -64,6 +64,8 @@ const blogsCategory = require("./routes/blogsCategory");
 const orientationCenter = require("./routes/orientation");
 const whereToBuy = require("./routes/whereToBuy");
 const exhibitionProduct = require("./routes/exhibitionProduct");
+const careerDetails = require("./routes/careerDetails");
+
 ///////////////////////////////////////////////////////////
 
 // environment variable or constants
@@ -126,6 +128,7 @@ app.use("/api", warrentyRegistration);
 app.use("/api", orientationCenter);
 app.use("/api", whereToBuy);
 app.use("/api", exhibitionProduct);
+app.use("/api", careerDetails);
 ////////////////////////////////////////////////////
 
 app.use(notFound);
