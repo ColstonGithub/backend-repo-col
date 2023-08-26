@@ -205,7 +205,6 @@ exports.createProduct = async (req, res) => {
 //   }
 // };
 
-
 exports.getProductDetailsById = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -220,16 +219,15 @@ exports.getProductDetailsById = async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    const relatedProducts = await Product.find({ category: product.category }).exec();
+    const relatedProducts = await Product.find({
+      category: product.category,
+    }).exec();
 
     res.status(200).json({ product, relatedProducts });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
-
-
-
 
 // new update
 exports.deleteProductById = async (req, res) => {
@@ -328,7 +326,7 @@ exports.getProducts = async (req, res) => {
     const totalPages = Math.ceil(count / limit);
     const products = createProducts(product);
     // let sortedByDates = sortBy(products, "updatedAt");
-    console.log("products ", products);
+
     if (product) {
       res.status(200).json({
         products,
@@ -371,13 +369,15 @@ exports.updateProduct = async (req, res) => {
       // Set the PDF URL in the catalogueObj
       pdf = uploadedPDF.Location;
     }
-
     // Upload product pictures
     if (
       req.files &&
       req.files["productPicture"] &&
-      req.files["productPicture"][0].img != ""
+      req.files["productPicture"][0].img != "" &&
+      req.files["productPicture"] != undefined &&
+      req.files["productPicture"] != []
     ) {
+      console.log("productPictures");
       productPictures = await Promise.all(
         req.files["productPicture"].map(async (file, index) => {
           const fileContent = file.buffer;
@@ -517,7 +517,13 @@ exports.updateProduct = async (req, res) => {
     if (pdf != undefined) {
       product.pdf = pdf;
     }
-    if (productPictures) {
+    if (
+      productPictures != [] &&
+      productPictures != "" &&
+      productPictures != undefined && 
+      req.files["productPicture"] != undefined
+    ) {
+      console.log("product ");
       product.productPictures = productPictures;
     }
     const updatedProduct = await Product.findOneAndUpdate({ _id }, product, {
