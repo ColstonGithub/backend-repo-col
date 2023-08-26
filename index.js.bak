@@ -1,26 +1,5 @@
-const express = require('express');
-const https = require('https');
-const fs = require('fs');
-const port = 5000;
-
-var key = fs.readFileSync('./private.key');
-var cert = fs.readFileSync('./certificate.crt');
-var options = {
-  key: key,
-  cert: cert
-};
-
-app = express()
-app.get('/', (req, res) => {
-   res.send('Now using https..');
-});
-
-var server = https.createServer(options, app);
-
-server.listen(port, () => {
-  console.log("server starting on port : " + port)
-});
-
+const express = require("express");
+const app = express();
 const dotenv = require("dotenv");
 const path = require("path");
 const { connectDB } = require("./config/db");
@@ -30,6 +9,8 @@ const {
 } = require("./common-middleware/errorMiddleware");
 
 const cors = require("cors");
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //routes
 
@@ -64,10 +45,15 @@ const blogsCategory = require("./routes/blogsCategory");
 const orientationCenter = require("./routes/orientation");
 const whereToBuy = require("./routes/whereToBuy");
 const exhibitionProduct = require("./routes/exhibitionProduct");
-///////////////////////////////////////////////////////////
+const careerDetails = require("./routes/careerDetails");
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 // environment variable or constants
 dotenv.config();
+
+// connecting to mongoDB and then running server on oprt 5000
+const port = process.env.PORT || 5000;
 
 connectDB();
 
@@ -93,7 +79,7 @@ app.use(function (req, res, next) {
   );
   next();
 });
-////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use("/api", adminRoutes);
 app.use("/api", categoryRoutes);
@@ -126,7 +112,13 @@ app.use("/api", warrentyRegistration);
 app.use("/api", orientationCenter);
 app.use("/api", whereToBuy);
 app.use("/api", exhibitionProduct);
-////////////////////////////////////////////////////
+app.use("/api", careerDetails);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.use(notFound);
 app.use(errorHandler);
+
+app.listen(port, () => {
+  console.log("Backend server is running at port", port);
+});
