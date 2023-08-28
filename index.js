@@ -65,6 +65,8 @@ const orientationCenter = require("./routes/orientation");
 const whereToBuy = require("./routes/whereToBuy");
 const exhibitionProduct = require("./routes/exhibitionProduct");
 const careerDetails = require("./routes/careerDetails");
+const initialImages = require("./routes/initialImages");
+const initialImagesAdmin = require("./routes/initialImagesAdmin");
 
 ///////////////////////////////////////////////////////////
 
@@ -129,6 +131,9 @@ app.use("/api", orientationCenter);
 app.use("/api", whereToBuy);
 app.use("/api", exhibitionProduct);
 app.use("/api", careerDetails);
+app.use("/api", initialImages);
+app.use("/api", initialImagesAdmin);
+
 ////////////////////////////////////////////////////
 
 app.use(notFound);
