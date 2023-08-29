@@ -20,6 +20,6 @@ router.post(
   createInitialImage
 );
 
-router.get("/initialImageAdmin/getInitialImages", getInitialImages);
+router.get("/initialImageAdmin/getInitialImagesAdmin", getInitialImages);
 
 module.exports = router;

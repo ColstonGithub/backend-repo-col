@@ -48,22 +48,11 @@ exports.createInitialImage = async (req, res) => {
 };
 
 exports.getInitialImages = async (req, res) => {
-  const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
-  const page = parseInt(req.query.page) || 1; // Set a default page number of 1
-
   try {
-    const initialImages = await InitialImagesAdmin.find({})
-      .sort({ _id: -1 })
-      .limit(limit)
-      .skip(limit * page - limit);
-
-    const count = await InitialImagesAdmin.countDocuments().exec();
-    const totalPages = Math.ceil(count / limit);
-
+    const initialImages = await InitialImagesAdmin.find({}).sort({ _id: -1 });
     if (initialImages) {
       res.status(200).json({
         initialImages,
-        pagination: { currentPage: page, totalPages, totalItems: count },
       });
     } else {
       return res.status(400).json({ error: error.message });
