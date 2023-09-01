@@ -173,37 +173,6 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// exports.getProductDetailsById = (req, res) => {
-//   try {
-//     const { productId } = req.params;
-
-//     if (productId) {
-//       console.log("productId ", productId);
-//       Product.findOne({ _id: productId }).exec((error, product) => {
-//         console.log("product ", product);
-//         if (error) return res.status(400).json({ error });
-//         if (product) {
-//           console.log("product ", product);
-//           Product.find({ category: product.category }).exec(
-//             (error, relatedProducts) => {
-//               if (error) {
-//                 return res.status(400).json({ error });
-//               } else {
-//                 res
-//                   .status(200)
-//                   .json({ product, relatedProducts: relatedProducts });
-//               }
-//             }
-//           );
-//         }
-//       });
-//     } else {
-//       return res.status(400).json({ error: "Params required" });
-//     }
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
 
 exports.getProductDetailsById = async (req, res) => {
   try {
@@ -377,7 +346,6 @@ exports.updateProduct = async (req, res) => {
       req.files["productPicture"] != undefined &&
       req.files["productPicture"] != []
     ) {
-      console.log("productPictures");
       productPictures = await Promise.all(
         req.files["productPicture"].map(async (file, index) => {
           const fileContent = file.buffer;
@@ -428,17 +396,14 @@ exports.updateProduct = async (req, res) => {
                 Body: fileContent,
                 ACL: "public-read",
               };
-
               // Upload the product picture to DigitalOcean Spaces
               const uploadedFile = await s3.upload(uploadParams).promise();
-
               return {
                 img: uploadedFile.Location,
                 colorImageAltText: req.body.colorImageAltText[i] || "",
               };
             })
           );
-
           return {
             colorName: color,
             productPictures,
@@ -523,7 +488,6 @@ exports.updateProduct = async (req, res) => {
       productPictures != undefined && 
       req.files["productPicture"] != undefined
     ) {
-      console.log("product ");
       product.productPictures = productPictures;
     }
     const updatedProduct = await Product.findOneAndUpdate({ _id }, product, {
@@ -538,7 +502,6 @@ exports.updateProduct = async (req, res) => {
 
 exports.getProductsByCategoryId = async (req, res) => {
   const { id } = req.body;
-
   const limit = parseInt(req.query.limit) || 20; // Set a default of 10 items per page
   const page = parseInt(req.query.page) || 1; // Set a default page number of 1
   try {

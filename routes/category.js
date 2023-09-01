@@ -30,7 +30,7 @@ router.get("/category/getcategory", getCategories);
 
 router.get("/category/getcategory/:id", getCategoriesById);
 
-router.get("/category/:id/children", getSubCategories);
+router.post("/category/id/children", getSubCategories);
 
 router.patch(
   "/category/update",

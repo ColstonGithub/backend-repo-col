@@ -84,16 +84,16 @@ exports.addCategory = async (req, res) => {
 };
 
 exports.getCategories = async (req, res) => {
-  const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
-  const page = parseInt(req.query.page) || 1; // Set a default page number of 1
+  // const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
+  // const page = parseInt(req.query.page) || 1; // Set a default page number of 1
   try {
     const categories = await Category.find({}).sort({ _id: -1 });
     // .limit(limit)
     //  .skip(limit * page - limit);
 
     const categoryList = createCategories(categories);
-    const count = await categoryList.length;
-    const totalPages = Math.ceil(count / limit);
+    // const count = await categoryList.length;
+    // const totalPages = Math.ceil(count / limit);
     // Sort the subCategory array by customOrder
     categoryList.sort((a, b) => a.customOrder - b.customOrder);
     if (categoryList) {
@@ -260,11 +260,11 @@ exports.getSubCategories = async (req, res) => {
     const category = await Category.find({}).select(
       "_id parentId name imageAltText categoryImage customOrder"
     );
-    const individualCat = await Category.findOne({ _id: req.params.id });
+    const individualCat = await Category.findOne({ _id: req.body.id });
     if (!individualCat) {
       return res.status(404).json({ message: "Category not found" });
     }
-    const subCategory = category.filter((cat) => cat.parentId == req.params.id);
+    const subCategory = category.filter((cat) => cat.parentId == req.body.id);
 
     const subCategoryIds = subCategory.map((cat) => cat._id);
 
@@ -278,6 +278,7 @@ exports.getSubCategories = async (req, res) => {
       return {
         _id: cat._id, // Include only the necessary properties
         name: cat.name,
+        parentId: cat.parentId,
         imageAltText: cat.imageAltText,
         categoryImage: cat.categoryImage,
         customOrder: cat.customOrder,
@@ -288,9 +289,7 @@ exports.getSubCategories = async (req, res) => {
     const totalProductCount = products.length;
 
     // Sort the subCategory array by customOrder
-    subCategoryWithProductCount.sort(
-      (a, b) => a.customOrder - b.customOrder
-    );
+    subCategoryWithProductCount.sort((a, b) => a.customOrder - b.customOrder);
     res.status(200).json({
       subCategoryList: subCategoryWithProductCount,
       totalProductCount: totalProductCount, // Adding totalProductCount to the response
