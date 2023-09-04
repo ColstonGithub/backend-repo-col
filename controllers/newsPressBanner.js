@@ -143,17 +143,20 @@ exports.updateNewsPressBanner = async (req, res) => {
       createdBy: req.user._id,
     };
 
-    if (req.file) {
-      const fileContent = req.file.buffer;
-      const filename = shortid.generate() + "-" + req.file.originalname;
+    if (req.files["bannerImage"]) {
+      const fileContent = req.files["bannerImage"][0].buffer;
+      const filename =
+        shortid.generate() + "-" + req.files["bannerImage"][0].originalname;
       const uploadParams = {
         Bucket: "colston-images", // Replace with your DigitalOcean Spaces bucket name
         Key: filename,
         Body: fileContent,
         ACL: "public-read",
       };
+
       // Upload the file to DigitalOcean Spaces
       const uploadedFile = await s3.upload(uploadParams).promise();
+
       // Set the image URL in the bannerImage variable
       pageBanner.bannerImage = uploadedFile.Location;
     }
