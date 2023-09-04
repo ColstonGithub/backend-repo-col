@@ -25,14 +25,23 @@ const upload = multer({ storage: storage });
 const requireSignin = async (req, res, next) => {
   if (req.headers.authorization) {
     const token = req.headers.authorization.split(" ")[1];
-    const user = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = user;
+    try {
+      const user = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = user;
+      next();
+    } catch (err) {
+      if (err.name === "TokenExpiredError") {
+        return res.status(401).json({ message: "Token has expired" });
+      }
+      return res
+        .status(400)
+        .json({ message: "Authorization required; use a valid token" });
+    }
   } else {
     return res
       .status(400)
-      .json({ message: "Authorization required use valid token" });
+      .json({ message: "Authorization required, use a valid token" });
   }
-  next();
 };
 
 exports.superAdminMiddleware = (req, res, next) => {
