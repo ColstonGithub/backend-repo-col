@@ -291,10 +291,8 @@ exports.getProducts = async (req, res) => {
     const totalPages = Math.ceil(count / limit);
     const products = createProducts(product);
     // let sortedByDates = sortBy(products, "updatedAt");
-    console.log("productList", product[0].colors[0]);
+
     if (products) {
-      console.log("product ", products[0].colors[0]);
-      console.log("product image ", products[0].productPictures);
       res.status(200).json({
         products,
         pagination: { currentPage: page, totalPages, totalItems: count },
@@ -311,8 +309,6 @@ exports.updateProduct = async (req, res) => {
   try {
     const { name, _id, description, specification, category, createdBy } =
       req.body;
-    console.log("colorPicture0 ", req.files);
-    console.log("colorPicture1 ", req.files);
     const product = {
       createdBy: req.user._id,
     };
@@ -489,8 +485,6 @@ exports.updateProduct = async (req, res) => {
     ) {
       product.productPictures = productPictures;
     }
-
-    console.log("product  ", product);
 
     const updatedProduct = await Product.findOneAndUpdate({ _id }, product, {
       new: true,
