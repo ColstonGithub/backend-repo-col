@@ -16,7 +16,6 @@ exports.createProduct = async (req, res) => {
     const { name, description, specification, category } = req.body;
     let productPictures = [];
     let pdf = "";
-
     // Upload PDF file
     if (req.files && req.files["pdf"]) {
       const pdfFile = req.files["pdf"][0];
@@ -63,7 +62,7 @@ exports.createProduct = async (req, res) => {
     let colors =
       req.files[`colorPicture1`] && req.files[`colorPicture1`] !== undefined
         ? req.body.colorName
-        : [];
+        : "";
     let col =
       req.files[`colorPicture0`] && req.files[`colorPicture0`] !== undefined
         ? req.body.colorName
@@ -71,7 +70,7 @@ exports.createProduct = async (req, res) => {
     let colorDocs;
 
     // Store data in array before saving
-    if (req.files[`colorPicture1`] !== undefined && colors !== []) {
+    if (req.files[`colorPicture1`] !== undefined && colors !== "") {
       colorDocs = await Promise.all(
         colors?.map(async (color, index) => {
           const productPictures = await Promise.all(
@@ -87,7 +86,6 @@ exports.createProduct = async (req, res) => {
 
               // Upload the product picture to DigitalOcean Spaces
               const uploadedFile = await s3.upload(uploadParams).promise();
-
               return {
                 img: uploadedFile.Location,
                 colorImageAltText: req.body.colorImageAltText[i] || "",
@@ -161,7 +159,6 @@ exports.createProduct = async (req, res) => {
       colors: colorDocs,
       createdBy: req.user._id,
     });
-
     product.save((error, product) => {
       if (error) return res.status(400).json({ error: error.message });
       if (product) {
@@ -172,7 +169,6 @@ exports.createProduct = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 exports.getProductDetailsById = async (req, res) => {
   try {
@@ -295,8 +291,10 @@ exports.getProducts = async (req, res) => {
     const totalPages = Math.ceil(count / limit);
     const products = createProducts(product);
     // let sortedByDates = sortBy(products, "updatedAt");
-
-    if (product) {
+    console.log("productList", product[0].colors[0]);
+    if (products) {
+      console.log("product ", products[0].colors[0]);
+      console.log("product image ", products[0].productPictures);
       res.status(200).json({
         products,
         pagination: { currentPage: page, totalPages, totalItems: count },
@@ -313,7 +311,8 @@ exports.updateProduct = async (req, res) => {
   try {
     const { name, _id, description, specification, category, createdBy } =
       req.body;
-
+    console.log("colorPicture0 ", req.files);
+    console.log("colorPicture1 ", req.files);
     const product = {
       createdBy: req.user._id,
     };
@@ -375,7 +374,7 @@ exports.updateProduct = async (req, res) => {
     let colors =
       req.files[`colorPicture1`] && req.files[`colorPicture1`] !== undefined
         ? req.body.colorName
-        : [];
+        : "";
     let col =
       req.files[`colorPicture0`] && req.files[`colorPicture0`] !== undefined
         ? req.body.colorName
@@ -383,7 +382,7 @@ exports.updateProduct = async (req, res) => {
     let colorDocs;
 
     // Store data in array before saving
-    if (req.files[`colorPicture1`] !== undefined && colors !== []) {
+    if (req.files[`colorPicture1`] !== undefined && colors !== "") {
       colorDocs = await Promise.all(
         colors?.map(async (color, index) => {
           const productPictures = await Promise.all(
@@ -473,7 +472,7 @@ exports.updateProduct = async (req, res) => {
       product.specification = specification;
     }
     if (
-      (req.files[`colorPicture1`] !== undefined && colors !== []) ||
+      (req.files[`colorPicture1`] !== undefined && colors !== "") ||
       (col && req.files[`colorPicture0`])
     ) {
       product.colors = colorDocs;
@@ -485,11 +484,14 @@ exports.updateProduct = async (req, res) => {
     if (
       productPictures != [] &&
       productPictures != "" &&
-      productPictures != undefined && 
+      productPictures != undefined &&
       req.files["productPicture"] != undefined
     ) {
       product.productPictures = productPictures;
     }
+
+    console.log("product  ", product);
+
     const updatedProduct = await Product.findOneAndUpdate({ _id }, product, {
       new: true,
     });
