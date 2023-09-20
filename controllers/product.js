@@ -279,7 +279,24 @@ const createProducts = async (products) => {
   }
   return productList;
 };
-
+const createNewArrivalProducts = (products) => {
+  const productList = [];
+  for (let prod of products) {
+    productList.push({
+      _id: prod._id,
+      name: prod.name,
+      colors: prod.colors,
+      description: prod.description,
+      specification: prod.specification,
+      pdf: prod.pdf,
+      productPictures: prod.productPictures,
+      category: prod.category,
+      createdAt: prod.createdAt,
+      createdBy: prod.createdBy,
+    });
+  }
+  return productList;
+};
 exports.getProducts = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
   const page = parseInt(req.query.page) || 1; // Set a default page number of 1
@@ -532,8 +549,8 @@ exports.getProductsByCategoryId = async (req, res) => {
 };
 
 exports.getNewArrivalProducts = async (req, res) => {
-  const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
-  const page = parseInt(req.query.page) || 1; // Set a default page number of 1
+  const limit = parseInt(req.query.limit) || 10; 
+  const page = parseInt(req.query.page) || 1; 
   try {
     const product = await Product.find({})
       .select("_id productPictures category name")
@@ -542,7 +559,7 @@ exports.getNewArrivalProducts = async (req, res) => {
       .skip(limit * page - limit);
     const count = await Product.countDocuments().exec();
     const totalPages = Math.ceil(count / limit);
-    const products = createProducts(product);
+    const products = createNewArrivalProducts(product);
     let sortedByDates = sortBy(products, "updatedAt");
     if (product) {
       res.status(200).json({
@@ -558,8 +575,8 @@ exports.getNewArrivalProducts = async (req, res) => {
 };
 
 exports.getSearchProducts = async (req, res) => {
-  const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
-  const page = parseInt(req.query.page) || 1; // Set a default page number of 1
+  const limit = parseInt(req.query.limit) || 10;
+  const page = parseInt(req.query.page) || 1; 
   const searchKeyword = req.query.search;
   try {
     const product = await Product.find({})
