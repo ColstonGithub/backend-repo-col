@@ -258,9 +258,11 @@ exports.deleteProductById = async (req, res) => {
   }
 };
 
-function createProducts(products) {
+const createProducts = async (products) => {
   const productList = [];
   for (let prod of products) {
+    let category = await Category.findOne({ _id: prod.category });
+    let categoryName = category?.name || "";
     productList.push({
       _id: prod._id,
       name: prod.name,
@@ -268,16 +270,15 @@ function createProducts(products) {
       description: prod.description,
       specification: prod.specification,
       pdf: prod.pdf,
-      amazonLink: prod.amazonLink,
       productPictures: prod.productPictures,
       category: prod.category,
+      categoryName: categoryName,
       createdAt: prod.createdAt,
       createdBy: prod.createdBy,
     });
   }
-
   return productList;
-}
+};
 
 exports.getProducts = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10; // Set a default of 10 items per page
@@ -289,7 +290,7 @@ exports.getProducts = async (req, res) => {
       .skip(limit * page - limit);
     const count = await Product.countDocuments().exec();
     const totalPages = Math.ceil(count / limit);
-    const products = createProducts(product);
+    const products = await createProducts(product);
     // let sortedByDates = sortBy(products, "updatedAt");
 
     if (products) {
