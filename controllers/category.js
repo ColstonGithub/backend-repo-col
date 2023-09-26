@@ -11,10 +11,11 @@ const s3 = new AWS.S3({
 });
 
 function createCategories(categories, parentId = null) {
+
   const categoryList = [];
   let category;
-  if (parentId == null) {
-    category = categories.filter((cat) => cat.parentId == undefined);
+  if (parentId == null || parentId === '' || parentId === " ") {
+    category = categories.filter((cat) => cat.parentId == undefined || cat.parentId == '');
   } else {
     category = categories.filter((cat) => cat.parentId == parentId);
   }
